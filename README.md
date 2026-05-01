@@ -4,7 +4,7 @@ Plugin WordPress per inserire una griglia di suggerimenti (box con immagine, tit
 
 ---
 
-## Stato attuale — v1.0.0
+## Stato attuale — v1.1.0
 
 ### Funzionalità implementate
 
@@ -13,11 +13,15 @@ Plugin WordPress per inserire una griglia di suggerimenti (box con immagine, tit
   1. **Override per post ID** — assegna un gruppo specifico a un singolo articolo
   2. **Mappa categorie** — associa categorie a gruppi, con campo Peso per definire la priorità quando un articolo ha più categorie
   3. **Gruppo default** — usato quando nessuna categoria corrisponde
-- Interfaccia di amministrazione con tre tab: Gruppi di card, Categorie, Override post
+- Interfaccia di amministrazione con quattro tab: Gruppi di card, Categorie, Override post, Impostazioni
 - Selezione immagini dalla media library di WordPress
-- CSS responsive: 3 colonne su desktop, 2 su tablet, 1 su mobile
-- Ogni card è interamente cliccabile (elemento `<a>`)
+- CSS responsive: max 3 colonne su desktop, 2 su tablet, 1 su mobile
+- **Bottone card configurabile**: se il campo "Testo bottone" è compilato, mostra un bottone `<a>` e il box non è cliccabile; se vuoto, l'intera card è un `<a>` cliccabile (nessun bottone)
+- **Titolo sezione configurabile** dall'interfaccia admin (tab Impostazioni); fallback al valore in `UDS_PFG_CONFIG`; vuoto = nasconde il titolo
 - Configurazione centralizzata tramite costante `UDS_PFG_CONFIG` in cima al file PHP
+- **Uninstall hook**: elimina tutte le opzioni dal database quando il plugin viene rimosso da WordPress
+- **Filtri WordPress**: `uds_pfg_titolo_sezione` e `uds_pfg_cards` per override da tema o mu-plugin
+- Admin scritto in vanilla JS (nessuna dipendenza da jQuery nel codice custom)
 
 ### File
 
@@ -45,10 +49,24 @@ uds-posts-footer-grid/
 | `capability`     | `manage_options`         | Capability richiesta per accedere all'admin              |
 | `menu_parent`    | `options-general.php`    | Posizione menu: vuoto = primo livello, oppure slug pagina WP |
 | `post_types`     | `['post']`               | Post type su cui mostrare la griglia                     |
-| `titolo_sezione` | `Ti potrebbero interessare anche` | Titolo sopra la griglia (hard-coded, da rendere configurabile) |
+| `titolo_sezione` | `Ti potrebbero interessare anche` | Titolo di fallback (sovrascrivibile dall'admin o con `apply_filters`) |
 | `opt_groups`     | `uds_pfg_groups`         | Chiave wp_options per i gruppi                           |
 | `opt_map`        | `uds_pfg_cat_map`        | Chiave wp_options per la mappa categorie                 |
 | `opt_overrides`  | `uds_pfg_overrides`      | Chiave wp_options per gli override                       |
+
+### Filtri disponibili
+
+```php
+// Modifica il titolo della sezione prima del rendering
+add_filter( 'uds_pfg_titolo_sezione', function( $titolo ) {
+    return 'Il mio titolo personalizzato';
+} );
+
+// Modifica o filtra le card prima del rendering (es. rimuovi card per certi utenti)
+add_filter( 'uds_pfg_cards', function( $cards, $post_id ) {
+    return $cards;
+}, 10, 2 );
+```
 
 ---
 
@@ -56,33 +74,23 @@ uds-posts-footer-grid/
 
 ### Interfaccia e configurazione
 
-- **Titolo sezione configurabile** — campo editabile nell'admin, non più hard-coded in `UDS_PFG_CONFIG`. Se vuoto, il titolo non viene renderizzato.
-
-- **Bottone opzionale** — se il campo "Testo bottone" è compilato, viene mostrato un bottone con quel testo. In questo caso il link vale solo per il bottone, e il box non è interamente cliccabile. Se il campo è vuoto, il box rimane interamente cliccabile come ora.
-
-- **Numero massimo di colonne** — campo numerico nell'admin per limitare le colonne della griglia (utile quando ci sono molte card). Le card in eccesso vanno a capo automaticamente.
+- **Numero massimo di colonne** — campo numerico nell'admin per limitare le colonne della griglia (utile quando ci sono molte card). Attualmente cappato a 3 in modo fisso.
 
 - **Colori configurabili** — almeno colore del bordo e del testo del bottone, per adattarsi al tema senza modificare il CSS.
 
 - **Export/Import impostazioni** — pulsante per scaricare le impostazioni come file JSON e per importarle. Utile per passare la configurazione da staging a produzione.
 
-- **Pulizia database** — pulsante nell'admin per eliminare tutte le opzioni salvate dal plugin (`uds_pfg_groups`, `uds_pfg_cat_map`, `uds_pfg_overrides`), con richiesta di conferma.
+- **Pulizia database** — pulsante nell'admin per eliminare tutte le opzioni salvate dal plugin, con richiesta di conferma (in alternativa all'uninstall hook).
 
 ### Comportamento immagini
 
-- **Immagine a larghezza piena** — di default le immagini devono occupare tutta la larghezza del box mostrandosi completamente, senza crop (`object-fit: contain` invece dell'attuale `cover`). Valutare se offrire entrambe le modalità come opzione per gruppo o per card.
+- **Immagine a larghezza piena** — valutare `object-fit: contain` invece dell'attuale `cover`, per mostrare l'immagine completa senza crop. Potrebbe diventare un'opzione per gruppo o per card.
 
 ### Link e portabilità
 
-- **Link relativi** — supportare URL relativi (es. `/corsi/nome-corso`) per immagini e link, in modo che le impostazioni siano portabili tra staging e produzione senza modifiche. Attualmente `esc_url_raw` accetta già relativi, ma va verificato il comportamento end-to-end e documentato.
+- **Link relativi** — `esc_url_raw` accetta già URL relativi, ma va verificato e documentato il comportamento end-to-end per garantire la portabilità tra staging e produzione.
 
 ### Stabilità e manutenzione
-
-- **Hook filtro per il titolo** — esporre `apply_filters('uds_pfg_titolo_sezione', $titolo)` per permettere override da tema o mu-plugin senza modificare il plugin.
-
-- **Hook filtro per le card** — esporre `apply_filters('uds_pfg_cards', $cards, $post_id)` per permettere manipolazione programmatica delle card prima del rendering.
-
-- **Uninstall hook** — aggiungere `register_uninstall_hook` per pulire le opzioni dal database quando il plugin viene eliminato da WordPress.
 
 - **Readme.txt** — aggiungere il file in formato WordPress.org per compatibilità con il repository plugin di WP (anche se il plugin non è destinato alla distribuzione pubblica).
 
