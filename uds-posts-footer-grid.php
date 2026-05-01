@@ -21,8 +21,12 @@ define( 'UDS_PFG_CONFIG', [
     // Versione — aggiornare ad ogni release per invalidare cache CSS/JS
     'version'         => '1.0.0',
 
-    // Capability richiesta per accedere alla pagina di amministrazione.
-    // Esempi: 'manage_options' (admin), 'edit_posts' (editor/autore), 'publish_posts'
+    // Capability o ruoli autorizzati ad accedere alla pagina di amministrazione.
+    // Accetta una stringa singola o un array di capability e/o nomi di ruolo.
+    // Esempi:
+    //   'manage_options'                          → solo amministratori
+    //   'edit_posts'                              → editor e autori standard
+    //   ['manage_options', 'uds_blog_author']     → admin + ruolo personalizzato
     'capability'      => 'manage_options',
 
     // Posizione del menu di amministrazione.
@@ -54,6 +58,10 @@ define( 'UDS_PFG_CONFIG', [
 
 class UDS_Posts_Footer_Grid {
 
+    // Capability virtuale usata internamente per il menu WP.
+    // L'accesso reale è gestito da grant_admin_cap() tramite user_has_cap.
+    private const ADMIN_CAP = 'uds_pfg_manage';
+
     private array $config;
 
     public function __construct( array $config ) {
@@ -65,11 +73,38 @@ class UDS_Posts_Footer_Grid {
     // ----------------------------------------------------------
 
     public function init() {
+        add_filter( 'user_has_cap',           [ $this, 'grant_admin_cap' ], 10, 3 );
         add_action( 'admin_menu',             [ $this, 'register_admin_menu' ] );
         add_action( 'admin_enqueue_scripts',  [ $this, 'enqueue_admin_assets' ] );
         add_action( 'admin_init',             [ $this, 'handle_save' ] );
         add_filter( 'the_content',            [ $this, 'append_grid' ], 20 );
         add_action( 'wp_enqueue_scripts',     [ $this, 'enqueue_frontend_assets' ] );
+    }
+
+    // ----------------------------------------------------------
+    // ACCESSO — concede ADMIN_CAP agli utenti autorizzati
+    // ----------------------------------------------------------
+
+    public function grant_admin_cap( array $allcaps, array $caps, array $args ): array {
+        if ( ! in_array( self::ADMIN_CAP, $caps, true ) ) return $allcaps;
+
+        $allowed = (array) $this->config['capability'];
+        $user    = isset( $args[1] ) ? get_userdata( $args[1] ) : false;
+
+        foreach ( $allowed as $cap_or_role ) {
+            // Controlla come capability diretta
+            if ( ! empty( $allcaps[ $cap_or_role ] ) ) {
+                $allcaps[ self::ADMIN_CAP ] = true;
+                return $allcaps;
+            }
+            // Controlla come nome di ruolo
+            if ( $user && in_array( $cap_or_role, (array) $user->roles, true ) ) {
+                $allcaps[ self::ADMIN_CAP ] = true;
+                return $allcaps;
+            }
+        }
+
+        return $allcaps;
     }
 
     // ----------------------------------------------------------
@@ -83,7 +118,7 @@ class UDS_Posts_Footer_Grid {
             add_menu_page(
                 'UdS Posts Footer Grid',
                 'Footer Grid',
-                $this->config['capability'],
+                self::ADMIN_CAP,
                 'uds-pfg',
                 [ $this, 'render_admin_page' ],
                 'dashicons-grid-view',
@@ -94,7 +129,7 @@ class UDS_Posts_Footer_Grid {
                 $parent,
                 'UdS Posts Footer Grid',
                 'Footer Grid',
-                $this->config['capability'],
+                self::ADMIN_CAP,
                 'uds-pfg',
                 [ $this, 'render_admin_page' ]
             );
@@ -140,7 +175,7 @@ class UDS_Posts_Footer_Grid {
 
     public function handle_save() {
         if ( ! isset( $_POST['uds_pfg_action'] ) ) return;
-        if ( ! current_user_can( $this->config['capability'] ) ) return;
+        if ( ! current_user_can( self::ADMIN_CAP ) ) return;
         if ( ! check_admin_referer( 'uds_pfg_save' ) ) return;
 
         $action = sanitize_key( $_POST['uds_pfg_action'] );
