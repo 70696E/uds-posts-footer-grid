@@ -121,7 +121,7 @@ class UDS_Posts_Footer_Grid {
         wp_enqueue_script(
             'uds-pfg-admin',
             plugin_dir_url( __FILE__ ) . 'admin.js',
-            [ 'jquery', 'media-upload' ],
+            [ 'media-upload' ],
             $this->config['version'],
             true
         );
@@ -293,17 +293,18 @@ class UDS_Posts_Footer_Grid {
             <?php submit_button( 'Salva gruppi' ); ?>
         </form>
 
-        <script type="text/html" id="tmpl-uds-pfg-group">
+        <template id="tmpl-uds-pfg-group">
             <?php $this->render_group( '__GI__', $empty_group ); ?>
-        </script>
-        <script type="text/html" id="tmpl-uds-pfg-card">
+        </template>
+        <template id="tmpl-uds-pfg-card">
             <?php $this->render_card( '__GI__', '__CI__', $empty_card ); ?>
-        </script>
+        </template>
         <?php
     }
 
     private function render_group( $gi, array $group ) {
-        $group_id = $group['id'] ?: uniqid( 'grp_' );
+        // Per i template (id vuoto) usa il placeholder __ID__, sostituito via JS con un ID univoco.
+        $group_id = $group['id'] ?: '__ID__';
         ?>
         <div class="uds-pfg-group" data-gi="<?php echo esc_attr( $gi ); ?>">
             <div class="uds-pfg-group-header">

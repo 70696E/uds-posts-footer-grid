@@ -104,3 +104,9 @@
 #uds-pfg-overrides-table td {
     vertical-align: middle;
 }
+
+/* Accordion */
+.uds-pfg-group-body.is-hidden,
+.uds-pfg-card-body.is-hidden {
+    display: none;
+}

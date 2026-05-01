@@ -1,150 +1,135 @@
-/* global jQuery, wp */
-jQuery( function( $ ) {
+/* global wp */
+document.addEventListener( 'DOMContentLoaded', function () {
+
+    var groupCounter    = document.querySelectorAll( '.uds-pfg-group' ).length;
+    var overrideCounter = document.querySelectorAll( '.uds-pfg-override-row' ).length;
+
+    function randId() {
+        return 'grp_' + Date.now().toString( 36 ) + Math.random().toString( 36 ).slice( 2, 5 );
+    }
 
     // ============================================================
-    // TOGGLE CORPO GRUPPO / CARD (accordion)
+    // CLICK — delegazione su document
     // ============================================================
 
-    $( document ).on( 'click', '.uds-pfg-toggle-group, .uds-pfg-group-header strong', function( e ) {
-        e.stopPropagation();
-        var $group = $( this ).closest( '.uds-pfg-group' );
-        $group.find( '.uds-pfg-group-body' ).slideToggle( 150 );
-    });
+    document.addEventListener( 'click', function ( e ) {
+        var t = e.target;
 
-    $( document ).on( 'click', '.uds-pfg-card-header', function() {
-        $( this ).siblings( '.uds-pfg-card-body' ).slideToggle( 150 );
-    });
+        // Toggle gruppo (clic sul pulsante ▼ o sul nome in grassetto)
+        if ( t.matches( '.uds-pfg-toggle-group' ) || t.matches( '.uds-pfg-group-header strong' ) ) {
+            e.stopPropagation();
+            t.closest( '.uds-pfg-group' ).querySelector( '.uds-pfg-group-body' ).classList.toggle( 'is-hidden' );
+            return;
+        }
 
-    // ============================================================
-    // AGGIORNA LABEL GRUPPO quando si modifica il nome
-    // ============================================================
+        // Toggle card (clic sull'header, ma non sui bottoni interni)
+        if ( t.matches( '.uds-pfg-card-header' ) ) {
+            t.nextElementSibling.classList.toggle( 'is-hidden' );
+            return;
+        }
 
-    $( document ).on( 'input', '.uds-pfg-group-nome', function() {
-        var val = $( this ).val() || 'Nuovo gruppo';
-        $( this ).closest( '.uds-pfg-group' ).find( '.uds-pfg-group-label' ).text( val );
-    });
+        // Rimuovi gruppo
+        if ( t.matches( '.uds-pfg-remove-group' ) ) {
+            e.stopPropagation();
+            if ( ! confirm( 'Eliminare questo gruppo?' ) ) return;
+            t.closest( '.uds-pfg-group' ).remove();
+            return;
+        }
 
-    $( document ).on( 'input', '.uds-pfg-card-titolo', function() {
-        var val = $( this ).val() || 'Nuova card';
-        $( this ).closest( '.uds-pfg-card' ).find( '.uds-pfg-card-label' ).text( val );
-    });
+        // Aggiungi gruppo
+        if ( t.matches( '#uds-pfg-add-group' ) ) {
+            var tmplGroup = document.getElementById( 'tmpl-uds-pfg-group' );
+            var htmlGroup = tmplGroup.innerHTML
+                .replace( /__GI__/g, groupCounter++ )
+                .replace( /__ID__/g, randId() );
+            document.getElementById( 'uds-pfg-groups-list' ).insertAdjacentHTML( 'beforeend', htmlGroup );
+            return;
+        }
 
-    // ============================================================
-    // AGGIUNGI GRUPPO
-    // ============================================================
+        // Aggiungi card
+        if ( t.matches( '.uds-pfg-add-card' ) ) {
+            var group   = t.closest( '.uds-pfg-group' );
+            var gi      = group.dataset.gi;
+            var ci      = group.querySelectorAll( '.uds-pfg-card' ).length;
+            var tmplCard = document.getElementById( 'tmpl-uds-pfg-card' );
+            var htmlCard = tmplCard.innerHTML.replace( /__GI__/g, gi ).replace( /__CI__/g, ci );
+            group.querySelector( '.uds-pfg-cards-list' ).insertAdjacentHTML( 'beforeend', htmlCard );
+            return;
+        }
 
-    var groupCounter = $( '.uds-pfg-group' ).length;
+        // Rimuovi card
+        if ( t.matches( '.uds-pfg-remove-card' ) ) {
+            e.stopPropagation();
+            t.closest( '.uds-pfg-card' ).remove();
+            return;
+        }
 
-    $( '#uds-pfg-add-group' ).on( 'click', function() {
-        var tmpl = $( '#tmpl-uds-pfg-group' ).html();
-        // Sostituisce il placeholder indice con il contatore corrente
-        tmpl = tmpl.replace( /__GI__/g, groupCounter );
-        groupCounter++;
-        $( '#uds-pfg-groups-list' ).append( tmpl );
-    });
+        // Seleziona immagine — Media Library
+        if ( t.matches( '.uds-pfg-select-image' ) ) {
+            e.preventDefault();
+            var cardBody = t.closest( '.uds-pfg-card-body' );
+            var frame = wp.media( {
+                title: 'Seleziona immagine',
+                button: { text: 'Usa questa immagine' },
+                multiple: false,
+                library: { type: 'image' },
+            } );
+            frame.on( 'select', function () {
+                var att    = frame.state().get( 'selection' ).first().toJSON();
+                var imgUrl = att.sizes && att.sizes.medium ? att.sizes.medium.url : att.url;
+                cardBody.querySelector( '.uds-pfg-img-id' ).value           = att.id;
+                cardBody.querySelector( '.uds-pfg-img-url' ).value          = att.url;
+                cardBody.querySelector( '.uds-pfg-image-preview' ).innerHTML = '<img src="' + imgUrl + '">';
+                cardBody.querySelector( '.uds-pfg-remove-image' ).style.display = '';
+            } );
+            frame.open();
+            return;
+        }
 
-    // ============================================================
-    // RIMUOVI GRUPPO
-    // ============================================================
+        // Rimuovi immagine
+        if ( t.matches( '.uds-pfg-remove-image' ) ) {
+            e.preventDefault();
+            var cardBody2 = t.closest( '.uds-pfg-card-body' );
+            cardBody2.querySelector( '.uds-pfg-image-preview' ).innerHTML = '';
+            cardBody2.querySelector( '.uds-pfg-img-id' ).value            = '';
+            cardBody2.querySelector( '.uds-pfg-img-url' ).value           = '';
+            t.style.display = 'none';
+            return;
+        }
 
-    $( document ).on( 'click', '.uds-pfg-remove-group', function( e ) {
-        e.stopPropagation();
-        if ( ! confirm( 'Eliminare questo gruppo?' ) ) return;
-        $( this ).closest( '.uds-pfg-group' ).remove();
-    });
+        // Aggiungi override
+        if ( t.matches( '#uds-pfg-add-override' ) ) {
+            var tmplOv = document.getElementById( 'tmpl-override-row' );
+            var htmlOv = tmplOv.innerHTML.replace( /__OI__/g, overrideCounter++ );
+            document.getElementById( 'uds-pfg-overrides-body' ).insertAdjacentHTML( 'beforeend', htmlOv );
+            return;
+        }
 
-    // ============================================================
-    // AGGIUNGI CARD
-    // ============================================================
-
-    $( document ).on( 'click', '.uds-pfg-add-card', function() {
-        var $group   = $( this ).closest( '.uds-pfg-group' );
-        var gi       = $group.data( 'gi' );
-        var ci       = $group.find( '.uds-pfg-card' ).length;
-        var tmpl     = $( '#tmpl-uds-pfg-card' ).html();
-
-        tmpl = tmpl.replace( /__GI__/g, gi ).replace( /__CI__/g, ci );
-        $group.find( '.uds-pfg-cards-list' ).append( tmpl );
-    });
-
-    // ============================================================
-    // RIMUOVI CARD
-    // ============================================================
-
-    $( document ).on( 'click', '.uds-pfg-remove-card', function( e ) {
-        e.stopPropagation();
-        $( this ).closest( '.uds-pfg-card' ).remove();
-    });
-
-    // ============================================================
-    // SELEZIONE IMMAGINE — Media Library
-    // ============================================================
-
-    $( document ).on( 'click', '.uds-pfg-select-image', function( e ) {
-        e.preventDefault();
-        var $btn     = $( this );
-        var $card    = $btn.closest( '.uds-pfg-card-body' );
-        var $preview = $card.find( '.uds-pfg-image-preview' );
-        var $id      = $card.find( '.uds-pfg-img-id' );
-        var $url     = $card.find( '.uds-pfg-img-url' );
-        var $remove  = $card.find( '.uds-pfg-remove-image' );
-
-        var frame = wp.media({
-            title: 'Seleziona immagine',
-            button: { text: 'Usa questa immagine' },
-            multiple: false,
-            library: { type: 'image' }
-        });
-
-        frame.on( 'select', function() {
-            var attachment = frame.state().get( 'selection' ).first().toJSON();
-            // Usa la dimensione medium se disponibile, altrimenti originale
-            var imgUrl = ( attachment.sizes && attachment.sizes.medium )
-                ? attachment.sizes.medium.url
-                : attachment.url;
-
-            $id.val( attachment.id );
-            $url.val( attachment.url ); // salviamo l'URL originale
-            $preview.html( '<img src="' + imgUrl + '">' );
-            $remove.show();
-        });
-
-        frame.open();
-    });
+        // Rimuovi override
+        if ( t.matches( '.uds-pfg-remove-override' ) ) {
+            t.closest( 'tr' ).remove();
+            return;
+        }
+    } );
 
     // ============================================================
-    // RIMUOVI IMMAGINE
+    // INPUT — aggiorna label in tempo reale
     // ============================================================
 
-    $( document ).on( 'click', '.uds-pfg-remove-image', function( e ) {
-        e.preventDefault();
-        var $card = $( this ).closest( '.uds-pfg-card-body' );
-        $card.find( '.uds-pfg-image-preview' ).empty();
-        $card.find( '.uds-pfg-img-id' ).val( '' );
-        $card.find( '.uds-pfg-img-url' ).val( '' );
-        $( this ).hide();
-    });
+    document.addEventListener( 'input', function ( e ) {
+        var t = e.target;
 
-    // ============================================================
-    // OVERRIDE — AGGIUNGI RIGA
-    // ============================================================
+        if ( t.matches( '.uds-pfg-group-nome' ) ) {
+            t.closest( '.uds-pfg-group' ).querySelector( '.uds-pfg-group-label' ).textContent =
+                t.value || 'Nuovo gruppo';
+            return;
+        }
 
-    var overrideCounter = $( '.uds-pfg-override-row' ).length;
+        if ( t.matches( '.uds-pfg-card-titolo' ) ) {
+            t.closest( '.uds-pfg-card' ).querySelector( '.uds-pfg-card-label' ).textContent =
+                t.value || 'Nuova card';
+            return;
+        }
+    } );
 
-    $( '#uds-pfg-add-override' ).on( 'click', function() {
-        var tmpl = $( '#tmpl-override-row' ).innerHTML ||
-                   document.getElementById( 'tmpl-override-row' ).innerHTML;
-        tmpl = tmpl.replace( /__OI__/g, overrideCounter );
-        overrideCounter++;
-        $( '#uds-pfg-overrides-body' ).append( tmpl );
-    });
-
-    // ============================================================
-    // OVERRIDE — RIMUOVI RIGA
-    // ============================================================
-
-    $( document ).on( 'click', '.uds-pfg-remove-override', function() {
-        $( this ).closest( 'tr' ).remove();
-    });
-
-});
+} );
