@@ -35,7 +35,8 @@ define( 'UDS_PFG_CONFIG', [
     //   'options-general.php' → sotto Impostazioni
     //   'themes.php'          → sotto Aspetto
     //   'tools.php'           → sotto Strumenti
-    'menu_parent'     => 'options-general.php',
+    //   'edit.php'              sotto Articoli
+    'menu_parent'     => 'edit.php',
 
     // Post type su cui mostrare la griglia.
     // Aggiungere altri slug se in futuro si vuole estendere.
