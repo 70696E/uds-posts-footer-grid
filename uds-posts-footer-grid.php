@@ -171,6 +171,7 @@ class UDS_Posts_Footer_Grid {
                     'titolo'       => sanitize_text_field( $c['titolo'] ),
                     'descrizione'  => sanitize_textarea_field( $c['descrizione'] ),
                     'link'         => esc_url_raw( $c['link'] ),
+                    'testo_btn'    => sanitize_text_field( $c['testo_btn'] ?? '' ),
                 ];
             }
             $groups[] = $group;
@@ -350,6 +351,7 @@ class UDS_Posts_Footer_Grid {
     }
 
     private function render_card( $gi, $ci, array $card ) {
+        $testo_btn = $card['testo_btn'] ?? '';
         ?>
         <div class="uds-pfg-card" data-ci="<?php echo esc_attr( $ci ); ?>">
             <div class="uds-pfg-card-header">
@@ -399,6 +401,19 @@ class UDS_Posts_Footer_Grid {
                             <input type="url" name="groups[<?php echo $gi; ?>][cards][<?php echo $ci; ?>][link]"
                                    value="<?php echo esc_url( $card['link'] ); ?>"
                                    class="large-text">
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Testo bottone</th>
+                        <td>
+                            <input type="text" name="groups[<?php echo $gi; ?>][cards][<?php echo $ci; ?>][testo_btn]"
+                                   value="<?php echo esc_attr( $testo_btn ); ?>"
+                                   class="regular-text"
+                                   placeholder="es. Scopri il corso">
+                            <p class="description">
+                                Se compilato, mostra un bottone con questo testo e il link vale solo per il bottone.
+                                Se vuoto, l'intera card è cliccabile (nessun bottone visibile).
+                            </p>
                         </td>
                     </tr>
                 </table>
@@ -598,8 +613,14 @@ class UDS_Posts_Footer_Grid {
                 <h3 class="uds-pfg-titolo"><?php echo esc_html( $titolo ); ?></h3>
             <?php endif; ?>
             <div class="uds-pfg-griglia" style="--uds-pfg-cols:<?php echo min( count( $group['cards'] ), 3 ); ?>">
-                <?php foreach ( $group['cards'] as $card ) : ?>
+                <?php foreach ( $group['cards'] as $card ) :
+                    $has_btn = ! empty( $card['testo_btn'] );
+                ?>
+                    <?php if ( $has_btn ) : ?>
+                    <div class="uds-pfg-card">
+                    <?php else : ?>
                     <a class="uds-pfg-card" href="<?php echo esc_url( $card['link'] ); ?>">
+                    <?php endif; ?>
                         <?php if ( $card['immagine_url'] ) : ?>
                             <div class="uds-pfg-img-wrap">
                                 <img src="<?php echo esc_url( $card['immagine_url'] ); ?>"
@@ -611,8 +632,16 @@ class UDS_Posts_Footer_Grid {
                         <?php if ( $card['descrizione'] ) : ?>
                             <div class="uds-pfg-card-desc"><?php echo esc_html( $card['descrizione'] ); ?></div>
                         <?php endif; ?>
-                        <div class="uds-pfg-card-btn">Scopri il corso</div>
+                        <?php if ( $has_btn ) : ?>
+                            <a class="uds-pfg-card-btn" href="<?php echo esc_url( $card['link'] ); ?>">
+                                <?php echo esc_html( $card['testo_btn'] ); ?>
+                            </a>
+                        <?php endif; ?>
+                    <?php if ( $has_btn ) : ?>
+                    </div>
+                    <?php else : ?>
                     </a>
+                    <?php endif; ?>
                 <?php endforeach; ?>
             </div>
         </div>
