@@ -1,0 +1,106 @@
+/* ============================================================
+   UdS Course Grid — Admin
+   ============================================================ */
+
+.uds-pfg-wrap .uds-pfg-tab-content {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-top: none;
+    padding: 1.5em;
+}
+
+/* Gruppo */
+.uds-pfg-group {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 1em;
+    background: #fafafa;
+}
+
+.uds-pfg-group-header {
+    display: flex;
+    align-items: center;
+    gap: 0.8em;
+    padding: 0.7em 1em;
+    background: #f0f0f0;
+    border-bottom: 1px solid #ddd;
+    border-radius: 4px 4px 0 0;
+    cursor: pointer;
+}
+
+.uds-pfg-drag-handle {
+    cursor: grab;
+    color: #999;
+    font-size: 1.1em;
+}
+
+.uds-pfg-group-label {
+    flex-grow: 1;
+    font-size: 1em;
+}
+
+.uds-pfg-group-body {
+    padding: 1em;
+}
+
+/* Card */
+.uds-pfg-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    margin-bottom: 0.8em;
+    background: #fff;
+}
+
+.uds-pfg-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+    padding: 0.5em 0.8em;
+    background: #f7f7f7;
+    border-bottom: 1px solid #e0e0e0;
+    cursor: pointer;
+}
+
+.uds-pfg-card-label {
+    flex-grow: 1;
+    font-size: 0.95em;
+    color: #555;
+}
+
+.uds-pfg-card-body {
+    padding: 0.5em 0.8em;
+}
+
+.uds-pfg-card-body .form-table th {
+    width: 120px;
+    padding: 6px 10px;
+}
+
+.uds-pfg-card-body .form-table td {
+    padding: 6px 10px;
+}
+
+/* Anteprima immagine */
+.uds-pfg-image-preview {
+    margin-bottom: 0.5em;
+    min-height: 20px;
+}
+
+.uds-pfg-image-preview img {
+    max-width: 120px;
+    max-height: 120px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    display: block;
+}
+
+/* Tabella mappa categorie */
+.uds-pfg-map-table td,
+.uds-pfg-map-table th {
+    vertical-align: middle;
+}
+
+/* Override */
+#uds-pfg-overrides-table td {
+    vertical-align: middle;
+}

@@ -1,0 +1,95 @@
+/* ============================================================
+   UdS Posts Footer Grid - Frontend
+   ============================================================ */
+
+.uds-pfg-wrapper {
+    margin: 3em 0 1em;
+    padding: 1.5em 0 0;
+    border-top: 1px solid #e0e0e0;
+}
+
+.uds-pfg-titolo {
+    text-align: center;
+    font-size: 1.2em;
+    margin-bottom: 1.2em;
+    color: #444;
+}
+
+.uds-pfg-griglia {
+    display: grid;
+    grid-template-columns: repeat(var(--uds-pfg-cols, 3), 1fr);
+    gap: 1.5em;
+}
+
+.uds-pfg-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    padding: 1.5em 1em;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+}
+
+.uds-pfg-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    text-decoration: none;
+    color: inherit;
+}
+
+.uds-pfg-img-wrap {
+    width: 100%;
+    margin-bottom: 0.8em;
+}
+
+.uds-pfg-img-wrap img {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+    border-radius: 4px;
+    display: block;
+}
+
+.uds-pfg-card-titolo {
+    font-weight: bold;
+    font-size: 1em;
+    margin: 0.4em 0;
+    color: #333;
+    text-align: center;
+}
+
+.uds-pfg-card-desc {
+    font-size: 0.88em;
+    color: #666;
+    margin: 0.4em 0 1em;
+    flex-grow: 1;
+    text-align: center;
+}
+
+.uds-pfg-card-btn {
+    border: 2px solid currentColor;
+    border-radius: 4px;
+    padding: 0.35em 1.2em;
+    font-size: 0.85em;
+    font-weight: bold;
+    margin-top: auto;
+    pointer-events: none;
+}
+
+@media (max-width: 900px) {
+    .uds-pfg-griglia {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 540px) {
+    .uds-pfg-griglia {
+        grid-template-columns: 1fr;
+    }
+}

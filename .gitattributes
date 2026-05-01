@@ -1,0 +1,5 @@
+# Forza Git a gestire i file di testo e a salvarli come LF nel repository
+* text=auto eol=lf
+
+# Se hai file specifici di Windows (es. file .bat) puoi forzarli a CRLF
+*.bat text eol=crlf
