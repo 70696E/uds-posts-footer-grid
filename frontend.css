@@ -59,10 +59,9 @@ a.uds-pfg-card {
 
 .uds-pfg-img-wrap img {
     width: 100%;
-    height: 160px;
-    object-fit: cover;
-    border-radius: 4px;
+    height: auto;
     display: block;
+    border-radius: 4px;
 }
 
 .uds-pfg-card-titolo {

@@ -638,8 +638,7 @@ class UDS_Posts_Footer_Grid {
             if ( ! empty( $g['default'] ) ) return $g;
         }
 
-        // 4. Primo gruppo disponibile
-        return $groups[0] ?? null;
+        return null;
     }
 
     private function find_group( array $groups, string $group_id ): ?array {
