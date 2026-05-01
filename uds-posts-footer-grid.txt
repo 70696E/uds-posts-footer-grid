@@ -1,4 +1,10 @@
 
+20260501 Il codice è passato a Claude Code.
+Claude Code: https://claude.ai/code/session_01FZwxALFvmUJgSJ5D9JUDHQ
+GitHub:      https://github.com/70696E/uds-posts-footer-grid
+
+---
+
 20260428-30 Iniziato qui:
 https://claude.ai/chat/d5dc8d7e-493f-428e-98b8-9063278fb677
 

@@ -1,131 +1,212 @@
 # UdS Posts Footer Grid
 
-Plugin WordPress per inserire una griglia di suggerimenti (box con immagine, titolo, descrizione, link) al fondo degli articoli del blog. La griglia è configurabile per categoria e sovrascrivibile per singolo articolo.
+Plugin WordPress che appende automaticamente una griglia di card suggerimento al fondo degli articoli del blog. Ogni card mostra immagine, titolo, descrizione e link. La griglia da mostrare si seleziona in base alla categoria dell'articolo, con possibilità di override per singolo post.
 
 ---
 
-## Stato attuale — v1.1.0
+## Installazione
 
-### Funzionalità implementate
+1. Copia la cartella `uds-posts-footer-grid/` in `wp-content/plugins/`
+2. Attiva il plugin da *Amministrazione → Plugin*
+3. Il menu **Footer Grid** appare sotto **Articoli** (configurabile, v. sotto)
+4. Crea almeno un gruppo di card nel tab *Gruppi di card*
+5. Assegna le categorie nel tab *Categorie*, oppure segna un gruppo come **Default**
 
-- Griglia responsive appesa al fondo dei post del blog (`post_type = post`) tramite hook `the_content`
-- Tre livelli di selezione del gruppo di card da mostrare, in ordine di priorità:
-  1. **Override per post ID** — assegna un gruppo specifico a un singolo articolo
-  2. **Mappa categorie** — associa categorie a gruppi, con campo Peso per definire la priorità quando un articolo ha più categorie
-  3. **Gruppo default** — usato quando nessuna categoria corrisponde
-- Interfaccia di amministrazione con quattro tab: Gruppi di card, Categorie, Override post, Impostazioni
-- Selezione immagini dalla media library di WordPress
-- CSS responsive: max 3 colonne su desktop, 2 su tablet, 1 su mobile
-- **Bottone card configurabile**: se il campo "Testo bottone" è compilato, mostra un bottone `<a>` e il box non è cliccabile; se vuoto, l'intera card è un `<a>` cliccabile (nessun bottone)
-- **Titolo sezione configurabile** dall'interfaccia admin (tab Impostazioni); fallback al valore in `UDS_PFG_CONFIG`; vuoto = nasconde il titolo
-- Configurazione centralizzata tramite costante `UDS_PFG_CONFIG` in cima al file PHP
-- **Uninstall hook**: elimina tutte le opzioni dal database quando il plugin viene rimosso da WordPress
-- **Filtri WordPress**: `uds_pfg_titolo_sezione` e `uds_pfg_cards` per override da tema o mu-plugin
-- Admin scritto in vanilla JS (nessuna dipendenza da jQuery nel codice custom)
+---
 
-### File
+## Configurazione rapida (`UDS_PFG_CONFIG`)
 
-```
-uds-posts-footer-grid/
-├── uds-posts-footer-grid.php   # Logica principale, classe UDS_Posts_Footer_Grid
-├── frontend.css                # Stili della griglia nel frontend
-├── admin.css                   # Stili della pagina di amministrazione
-└── admin.js                    # JS admin: media library, aggiunta/rimozione gruppi e card
-```
-
-### Dati salvati in wp_options
-
-| Chiave              | Contenuto                          |
-|---------------------|------------------------------------|
-| `uds_pfg_groups`    | Array dei gruppi di card           |
-| `uds_pfg_cat_map`   | Mappa categorie → gruppi (ordinata per peso) |
-| `uds_pfg_overrides` | Override per post ID               |
-
-### Configurazione (UDS_PFG_CONFIG)
-
-| Parametro        | Default                  | Descrizione                                              |
-|------------------|--------------------------|----------------------------------------------------------|
-| `version`        | `1.0.0`                  | Versione per cache busting CSS/JS                        |
-| `capability`     | `manage_options`         | Capability richiesta per accedere all'admin              |
-| `menu_parent`    | `options-general.php`    | Posizione menu: vuoto = primo livello, oppure slug pagina WP |
-| `post_types`     | `['post']`               | Post type su cui mostrare la griglia                     |
-| `titolo_sezione` | `Ti potrebbero interessare anche` | Titolo di fallback (sovrascrivibile dall'admin o con `apply_filters`) |
-| `opt_groups`     | `uds_pfg_groups`         | Chiave wp_options per i gruppi                           |
-| `opt_map`        | `uds_pfg_cat_map`        | Chiave wp_options per la mappa categorie                 |
-| `opt_overrides`  | `uds_pfg_overrides`      | Chiave wp_options per gli override                       |
-
-### Filtri disponibili
+La costante in cima a `uds-posts-footer-grid.php` è l'unico punto da toccare per adattare il plugin all'installazione senza modificare la logica.
 
 ```php
-// Modifica il titolo della sezione prima del rendering
-add_filter( 'uds_pfg_titolo_sezione', function( $titolo ) {
-    return 'Il mio titolo personalizzato';
+define( 'UDS_PFG_CONFIG', [
+
+    // Versione per cache busting CSS/JS — aggiornare ad ogni release
+    'version'        => '1.0.0',
+
+    // Chi può accedere al menu admin.
+    // Stringa singola o array di capability e/o nomi di ruolo.
+    'capability'     => [ 'manage_options', 'uds_blog_author' ],
+
+    // Posizione del menu nell'admin WP:
+    //   'edit.php'            → sotto Articoli
+    //   'options-general.php' → sotto Impostazioni
+    //   'themes.php'          → sotto Aspetto
+    //   ''                    → voce di primo livello
+    'menu_parent'    => 'edit.php',
+
+    // Post type su cui mostrare la griglia
+    'post_types'     => [ 'post' ],
+
+    // Titolo sopra la griglia nel frontend (fallback se non impostato dall'admin)
+    // Stringa vuota = titolo non mostrato
+    'titolo_sezione' => 'Ti potrebbero interessare anche',
+
+    // Chiavi wp_options (modificare solo se necessario evitare conflitti)
+    'opt_groups'     => 'uds_pfg_groups',
+    'opt_map'        => 'uds_pfg_cat_map',
+    'opt_overrides'  => 'uds_pfg_overrides',
+
+] );
+```
+
+### Accesso per ruoli multipli
+
+`capability` accetta una stringa o un array. Ogni elemento può essere una **capability WordPress** (es. `manage_options`, `edit_posts`) oppure un **nome di ruolo** (es. `administrator`, `uds_blog_author`). L'utente ottiene l'accesso se soddisfa almeno uno degli elementi.
+
+```php
+// Solo amministratori
+'capability' => 'manage_options',
+
+// Admin + ruolo personalizzato
+'capability' => [ 'manage_options', 'uds_blog_author' ],
+
+// Tutti gli autori standard
+'capability' => 'publish_posts',
+```
+
+---
+
+## Interfaccia di amministrazione
+
+Il pannello ha quattro tab.
+
+### Tab — Gruppi di card
+
+Un **gruppo** è un insieme di card visualizzate insieme. Per ogni gruppo:
+
+- **Nome gruppo** — identificativo leggibile
+- **Gruppo default** — usato quando nessuna categoria corrisponde; solo un gruppo può essere default
+- **Card** — ogni card ha: immagine (dalla media library), titolo, descrizione, link, testo bottone
+
+**Comportamento del link per card:**
+
+| `testo_btn` | `link` | Risultato |
+|-------------|--------|-----------|
+| vuoto       | presente | intera card cliccabile (`<a>`) |
+| vuoto       | vuoto    | card non cliccabile (`<div>`) |
+| compilato   | presente | card `<div>` + bottone `<a>` col testo indicato |
+| compilato   | vuoto    | card `<div>` + bottone `<span>` non cliccabile |
+
+Il link accetta URL assoluti (`https://...`) e relativi (`/percorso/pagina`).
+
+### Tab — Categorie
+
+Tabella con tutte le categorie del sito. Per ciascuna si sceglie il gruppo da usare e un **Peso** (numero intero). Se un articolo appartiene a più categorie, viene usata la prima corrispondenza in ordine di peso crescente (peso 10 prima di peso 20). Le categorie lasciate su *— nessuno (usa default) —* non contribuiscono alla selezione.
+
+### Tab — Override post
+
+Assegna un gruppo specifico a un singolo articolo tramite il suo ID. Ha priorità assoluta su categoria e default.
+
+### Tab — Impostazioni
+
+Imposta il **titolo della sezione** visualizzato sopra la griglia nel frontend. Se lasciato vuoto, il titolo non appare. Il valore qui ha priorità su `titolo_sezione` in `UDS_PFG_CONFIG`.
+
+---
+
+## Logica di selezione del gruppo
+
+Per ogni singolo articolo, il plugin scorre questi passi nell'ordine:
+
+1. **Override per post ID** — se esiste un override per quell'articolo, usa quel gruppo
+2. **Mappa categorie** — controlla le categorie dell'articolo in ordine di peso crescente; usa il primo gruppo assegnato
+3. **Gruppo default** — usa il gruppo marcato come default
+4. **Nessun gruppo trovato** — la griglia non viene mostrata
+
+---
+
+## Filtri WordPress
+
+Per personalizzazioni da tema o `mu-plugin` senza modificare il plugin:
+
+```php
+// Sovrascrive il titolo della sezione
+add_filter( 'uds_pfg_titolo_sezione', function( string $titolo ): string {
+    return 'Potrebbe interessarti anche';
 } );
 
-// Modifica o filtra le card prima del rendering (es. rimuovi card per certi utenti)
-add_filter( 'uds_pfg_cards', function( $cards, $post_id ) {
+// Filtra o riordina le card prima del rendering
+// $cards = array di card, $post_id = ID dell'articolo corrente
+add_filter( 'uds_pfg_cards', function( array $cards, int $post_id ): array {
+    // es. rimuovi la prima card su certi post
     return $cards;
 }, 10, 2 );
 ```
 
 ---
 
-## Sviluppi pianificati
+## Struttura dati in `wp_options`
 
-### Interfaccia e configurazione
+| Chiave              | Contenuto                                        |
+|---------------------|--------------------------------------------------|
+| `uds_pfg_groups`    | Array dei gruppi di card                         |
+| `uds_pfg_cat_map`   | Mappa categorie → gruppi, ordinata per peso      |
+| `uds_pfg_overrides` | Override per post ID                             |
+| `uds_pfg_settings`  | Impostazioni generali (es. titolo sezione)       |
 
-- **Numero massimo di colonne** — campo numerico nell'admin per limitare le colonne della griglia (utile quando ci sono molte card). Attualmente cappato a 3 in modo fisso.
+Tutte le chiavi vengono eliminate automaticamente se il plugin viene disinstallato da WordPress (*Plugin → Elimina*).
 
-- **Colori configurabili** — almeno colore del bordo e del testo del bottone, per adattarsi al tema senza modificare il CSS.
+### Struttura JSON gruppo
 
-- **Export/Import impostazioni** — pulsante per scaricare le impostazioni come file JSON e per importarle. Utile per passare la configurazione da staging a produzione.
+```json
+{
+  "id": "grp_abc123",
+  "nome": "Costellazioni",
+  "default": 0,
+  "cards": [
+    {
+      "immagine_id":  1234,
+      "immagine_url": "https://esempio.it/img.jpg",
+      "titolo":       "Scuola di Costellazioni",
+      "descrizione":  "Breve descrizione del corso",
+      "link":         "/corsi/costellazioni",
+      "testo_btn":    "Scopri il corso"
+    }
+  ]
+}
+```
 
-- **Pulizia database** — pulsante nell'admin per eliminare tutte le opzioni salvate dal plugin, con richiesta di conferma (in alternativa all'uninstall hook).
+---
 
-### Comportamento immagini
+## File del plugin
 
-- **Immagine a larghezza piena** — valutare `object-fit: contain` invece dell'attuale `cover`, per mostrare l'immagine completa senza crop. Potrebbe diventare un'opzione per gruppo o per card.
-
-### Link e portabilità
-
-- **Link relativi** — `esc_url_raw` accetta già URL relativi, ma va verificato e documentato il comportamento end-to-end per garantire la portabilità tra staging e produzione.
-
-### Stabilità e manutenzione
-
-- **Readme.txt** — aggiungere il file in formato WordPress.org per compatibilità con il repository plugin di WP (anche se il plugin non è destinato alla distribuzione pubblica).
+```
+uds-posts-footer-grid/
+├── uds-posts-footer-grid.php   # Configurazione + classe UDS_Posts_Footer_Grid
+├── frontend.css                # Stili della griglia nel frontend
+├── admin.css                   # Stili della pagina di amministrazione
+└── admin.js                    # JS admin vanilla (no jQuery): accordion,
+                                #   template gruppi/card, media library
+```
 
 ---
 
 ## Note tecniche
 
-### Perché non si usano i blocchi Gutenberg per la griglia
+### Perché non si usano i blocchi Gutenberg
 
-I blocchi con `layout: grid` generano CSS tramite classi dinamiche (`wp-container-core-group-is-layout-*`) che vengono accodate da `WP_Style_Engine` solo quando il post è nativo a blocchi. Iniettare questi blocchi via `do_blocks()` su un post classico produce HTML corretto ma senza i CSS necessari. La soluzione adottata (HTML + CSS custom) è più robusta e portabile.
+I blocchi con `layout: grid` generano CSS tramite classi dinamiche (`wp-container-core-group-is-layout-*`) accodate da `WP_Style_Engine` solo su post nativi a blocchi. Iniettare questi blocchi via `do_blocks()` su un post classico produce HTML corretto ma senza i CSS. La soluzione HTML + CSS custom è più robusta e portabile.
 
 ### Perché `the_content` e non un template hook
 
 `the_content` con priorità 20 è la scelta più compatibile con editor classico, Gutenberg e temi ibridi. Hook come `get_template_part` o `wp_after_content` sono tema-dipendenti. La guardia `in_the_loop()` previene rendering doppi nei loop secondari.
 
-### Struttura dati gruppi (wp_options)
+### Sottolineatura link e temi aggressivi
 
-```json
-[
-  {
-    "id": "grp_abc123",
-    "nome": "Costellazioni",
-    "default": 0,
-    "cards": [
-      {
-        "immagine_id": 1234,
-        "immagine_url": "https://...",
-        "titolo": "Scuola di Costellazioni",
-        "descrizione": "Breve descrizione",
-        "link": "https://..."
-      }
-    ]
-  }
-]
-```
+Alcuni temi usano selettori ad alta specificità (es. `body.single-post #primary .entry-content a`) che sovrascrivono i reset standard. Il CSS del plugin usa `!important` su `text-decoration: none` per `.uds-pfg-wrapper a` e relativi pseudo-stati — tecnica accettata per componenti plugin che devono isolarsi dal tema.
+
+### Accesso multi-ruolo
+
+Il plugin registra il menu con una capability virtuale interna (`uds_pfg_manage`) e la concede tramite filtro `user_has_cap` agli utenti che soddisfano uno qualsiasi degli elementi di `config['capability']`. Il filtro controlla direttamente `$allcaps` (capability) e `$user->roles` (ruoli) senza chiamare `current_user_can()` per evitare ricorsione.
+
+---
+
+## Sviluppi pianificati
+
+- **Numero massimo di colonne** — campo nell'admin per impostare il cap (ora fisso a 3)
+- **Colori configurabili** — colore bordo card e testo bottone dall'admin, senza toccare il CSS
+- **Export/Import impostazioni** — scarica/carica la configurazione come JSON (utile per staging → produzione)
+- **Pulizia database** — pulsante nell'admin con conferma (alternativa all'uninstall hook)
 
 ---
 
