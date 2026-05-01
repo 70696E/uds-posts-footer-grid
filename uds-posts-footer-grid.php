@@ -27,7 +27,7 @@ define( 'UDS_PFG_CONFIG', [
     //   'manage_options'                          → solo amministratori
     //   'edit_posts'                              → editor e autori standard
     //   ['manage_options', 'uds_blog_author']     → admin + ruolo personalizzato
-    'capability'      => 'manage_options',
+    'capability'      => ['manage_options', 'uds_blog_author'],
 
     // Posizione del menu di amministrazione.
     // Valori possibili:
