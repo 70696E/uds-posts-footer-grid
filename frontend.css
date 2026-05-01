@@ -35,10 +35,17 @@
 
 /* Reset link per tutto il componente — sovrascrive regole tema */
 .uds-pfg-wrapper a,
-.uds-pfg-wrapper a:hover,
+.uds-pfg-wrapper a *,
 .uds-pfg-wrapper a:focus,
-.uds-pfg-wrapper a:visited {
+.uds-pfg-wrapper a:focus *,
+.uds-pfg-wrapper a:visited,
+.uds-pfg-wrapper a:visited * {
     text-decoration: none;
+    color: inherit;
+}
+
+/* Hover: la sottolineatura dà il segnale di interattività */
+.uds-pfg-wrapper a:hover {
     color: inherit;
 }
 
