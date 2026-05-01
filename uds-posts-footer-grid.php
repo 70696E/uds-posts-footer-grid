@@ -149,6 +149,7 @@ class UDS_Posts_Footer_Grid {
             'save_groups'    => $this->save_groups(),
             'save_map'       => $this->save_map(),
             'save_overrides' => $this->save_overrides(),
+            'save_settings'  => $this->save_settings(),
             default          => null,
         };
     }
@@ -221,6 +222,20 @@ class UDS_Posts_Footer_Grid {
         $this->redirect_saved( 'overrides' );
     }
 
+    private function save_settings() {
+        $settings = [
+            'titolo_sezione' => sanitize_text_field( $_POST['titolo_sezione'] ?? '' ),
+        ];
+        update_option( 'uds_pfg_settings', $settings );
+        $this->redirect_saved( 'settings' );
+    }
+
+    private function get_titolo(): string {
+        $settings = get_option( 'uds_pfg_settings', [] );
+        // Priorità: DB → UDS_PFG_CONFIG → stringa vuota
+        return $settings['titolo_sezione'] ?? $this->config['titolo_sezione'];
+    }
+
     private function redirect_saved( string $tab ) {
         wp_redirect( add_query_arg( [
             'page'  => 'uds-pfg',
@@ -249,7 +264,12 @@ class UDS_Posts_Footer_Grid {
             <?php endif; ?>
 
             <nav class="nav-tab-wrapper">
-                <?php foreach ( [ 'groups' => 'Gruppi di card', 'map' => 'Categorie', 'overrides' => 'Override post' ] as $key => $label ) : ?>
+                <?php foreach ( [
+                    'groups'   => 'Gruppi di card',
+                    'map'      => 'Categorie',
+                    'overrides'=> 'Override post',
+                    'settings' => 'Impostazioni',
+                ] as $key => $label ) : ?>
                     <a href="?page=uds-pfg&tab=<?php echo $key; ?>"
                        class="nav-tab <?php echo $tab === $key ? 'nav-tab-active' : ''; ?>">
                         <?php echo $label; ?>
@@ -260,10 +280,11 @@ class UDS_Posts_Footer_Grid {
             <div class="uds-pfg-tab-content">
                 <?php
                 match ( $tab ) {
-                    'groups'    => $this->render_tab_groups( $groups ),
-                    'map'       => $this->render_tab_map( $groups, $map ),
-                    'overrides' => $this->render_tab_overrides( $groups, $overrides ),
-                    default     => $this->render_tab_groups( $groups ),
+                    'groups'   => $this->render_tab_groups( $groups ),
+                    'map'      => $this->render_tab_map( $groups, $map ),
+                    'overrides'=> $this->render_tab_overrides( $groups, $overrides ),
+                    'settings' => $this->render_tab_settings(),
+                    default    => $this->render_tab_groups( $groups ),
                 };
                 ?>
             </div>
@@ -419,6 +440,36 @@ class UDS_Posts_Footer_Grid {
                 </table>
             </div>
         </div>
+        <?php
+    }
+
+    // ----------------------------------------------------------
+    // TAB 4 — IMPOSTAZIONI GENERALI
+    // ----------------------------------------------------------
+
+    private function render_tab_settings() {
+        $titolo = $this->get_titolo();
+        ?>
+        <form method="post">
+            <?php wp_nonce_field( 'uds_pfg_save' ); ?>
+            <input type="hidden" name="uds_pfg_action" value="save_settings">
+            <table class="form-table">
+                <tr>
+                    <th scope="row"><label for="uds-pfg-titolo">Titolo sezione</label></th>
+                    <td>
+                        <input type="text" id="uds-pfg-titolo" name="titolo_sezione"
+                               value="<?php echo esc_attr( $titolo ); ?>"
+                               class="large-text"
+                               placeholder="es. Ti potrebbero interessare anche">
+                        <p class="description">
+                            Testo visualizzato sopra la griglia nel frontend.
+                            Lascia vuoto per nascondere il titolo.
+                        </p>
+                    </td>
+                </tr>
+            </table>
+            <?php submit_button( 'Salva impostazioni' ); ?>
+        </form>
         <?php
     }
 
@@ -604,7 +655,7 @@ class UDS_Posts_Footer_Grid {
     private function render_grid( array $group ): string {
         if ( empty( $group['cards'] ) ) return '';
 
-        $titolo = $this->config['titolo_sezione'];
+        $titolo = $this->get_titolo();
 
         ob_start();
         ?>
