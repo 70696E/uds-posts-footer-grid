@@ -33,21 +33,23 @@
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* Card interamente cliccabile (nessun bottone) */
-a.uds-pfg-card {
+/* Reset link per tutto il componente — sovrascrive regole tema */
+.uds-pfg-wrapper a,
+.uds-pfg-wrapper a:hover,
+.uds-pfg-wrapper a:focus,
+.uds-pfg-wrapper a:visited {
     text-decoration: none;
     color: inherit;
+}
+
+/* Card interamente cliccabile (nessun bottone) */
+a.uds-pfg-card {
     cursor: pointer;
 }
 
 .uds-pfg-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-}
-
-a.uds-pfg-card:hover {
-    text-decoration: none;
-    color: inherit;
 }
 
 .uds-pfg-img-wrap {
@@ -86,13 +88,6 @@ a.uds-pfg-card:hover {
     font-size: 0.85em;
     font-weight: bold;
     margin-top: auto;
-    text-decoration: none;
-    color: inherit;
-}
-
-.uds-pfg-card-btn:hover {
-    text-decoration: none;
-    color: inherit;
 }
 
 @media (max-width: 900px) {
