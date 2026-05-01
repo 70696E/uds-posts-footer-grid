@@ -198,6 +198,7 @@ class UDS_Posts_Footer_Grid {
             $group = [
                 'id'      => sanitize_key( $g['id'] ),
                 'nome'    => sanitize_text_field( $g['nome'] ),
+                'titolo'  => sanitize_text_field( $g['titolo'] ?? '' ),
                 'default' => isset( $g['default'] ) ? 1 : 0,
                 'cards'   => [],
             ];
@@ -380,6 +381,20 @@ class UDS_Posts_Footer_Grid {
                             <input type="text" name="groups[<?php echo $gi; ?>][nome]"
                                    value="<?php echo esc_attr( $group['nome'] ); ?>"
                                    class="regular-text uds-pfg-group-nome">
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Titolo sezione</th>
+                        <td>
+                            <input type="text" name="groups[<?php echo $gi; ?>][titolo]"
+                                   value="<?php echo esc_attr( $group['titolo'] ?? '' ); ?>"
+                                   class="large-text"
+                                   placeholder="Lascia vuoto per usare il titolo comune">
+                            <p class="description">
+                                Se compilato sovrascrive il titolo comune per questo gruppo.
+                                Se vuoto usa il titolo impostato in <em>Impostazioni</em>;
+                                se anche quello è vuoto, nessun titolo viene mostrato.
+                            </p>
                         </td>
                     </tr>
                     <tr>
@@ -692,7 +707,8 @@ class UDS_Posts_Footer_Grid {
         $cards = apply_filters( 'uds_pfg_cards', $group['cards'], $post_id );
         if ( empty( $cards ) ) return '';
 
-        $titolo = apply_filters( 'uds_pfg_titolo_sezione', $this->get_titolo() );
+        $titolo_comune = apply_filters( 'uds_pfg_titolo_sezione', $this->get_titolo() );
+        $titolo        = ! empty( $group['titolo'] ) ? $group['titolo'] : $titolo_comune;
 
         ob_start();
         ?>
