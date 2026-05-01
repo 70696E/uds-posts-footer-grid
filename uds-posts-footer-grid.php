@@ -156,7 +156,7 @@ class UDS_Posts_Footer_Grid {
 
     private function save_groups() {
         $groups = [];
-        $raw    = $_POST['groups'] ?? [];
+        $raw    = wp_unslash( $_POST['groups'] ?? [] );
 
         foreach ( $raw as $g ) {
             $group = [
@@ -224,7 +224,7 @@ class UDS_Posts_Footer_Grid {
 
     private function save_settings() {
         $settings = [
-            'titolo_sezione' => sanitize_text_field( $_POST['titolo_sezione'] ?? '' ),
+            'titolo_sezione' => sanitize_text_field( wp_unslash( $_POST['titolo_sezione'] ?? '' ) ),
         ];
         update_option( 'uds_pfg_settings', $settings );
         $this->redirect_saved( 'settings' );
@@ -419,9 +419,10 @@ class UDS_Posts_Footer_Grid {
                     <tr>
                         <th>Link</th>
                         <td>
-                            <input type="url" name="groups[<?php echo $gi; ?>][cards][<?php echo $ci; ?>][link]"
+                            <input type="text" name="groups[<?php echo $gi; ?>][cards][<?php echo $ci; ?>][link]"
                                    value="<?php echo esc_url( $card['link'] ); ?>"
-                                   class="large-text">
+                                   class="large-text"
+                                   placeholder="https://... oppure /percorso/relativo">
                         </td>
                     </tr>
                     <tr>
@@ -666,12 +667,15 @@ class UDS_Posts_Footer_Grid {
             <?php endif; ?>
             <div class="uds-pfg-griglia" style="--uds-pfg-cols:<?php echo min( count( $cards ), 3 ); ?>">
                 <?php foreach ( $cards as $card ) :
-                    $has_btn = ! empty( $card['testo_btn'] );
+                    $has_btn  = ! empty( $card['testo_btn'] );
+                    $has_link = ! empty( $card['link'] );
+                    // Card cliccabile solo se ha un link e non ha un bottone dedicato
+                    $card_tag = ( ! $has_btn && $has_link ) ? 'a' : 'div';
                 ?>
-                    <?php if ( $has_btn ) : ?>
-                    <div class="uds-pfg-card">
-                    <?php else : ?>
+                    <?php if ( $card_tag === 'a' ) : ?>
                     <a class="uds-pfg-card" href="<?php echo esc_url( $card['link'] ); ?>">
+                    <?php else : ?>
+                    <div class="uds-pfg-card">
                     <?php endif; ?>
                         <?php if ( $card['immagine_url'] ) : ?>
                             <div class="uds-pfg-img-wrap">
@@ -685,14 +689,18 @@ class UDS_Posts_Footer_Grid {
                             <div class="uds-pfg-card-desc"><?php echo esc_html( $card['descrizione'] ); ?></div>
                         <?php endif; ?>
                         <?php if ( $has_btn ) : ?>
-                            <a class="uds-pfg-card-btn" href="<?php echo esc_url( $card['link'] ); ?>">
-                                <?php echo esc_html( $card['testo_btn'] ); ?>
-                            </a>
+                            <?php if ( $has_link ) : ?>
+                                <a class="uds-pfg-card-btn" href="<?php echo esc_url( $card['link'] ); ?>">
+                                    <?php echo esc_html( $card['testo_btn'] ); ?>
+                                </a>
+                            <?php else : ?>
+                                <span class="uds-pfg-card-btn"><?php echo esc_html( $card['testo_btn'] ); ?></span>
+                            <?php endif; ?>
                         <?php endif; ?>
-                    <?php if ( $has_btn ) : ?>
-                    </div>
-                    <?php else : ?>
+                    <?php if ( $card_tag === 'a' ) : ?>
                     </a>
+                    <?php else : ?>
+                    </div>
                     <?php endif; ?>
                 <?php endforeach; ?>
             </div>
