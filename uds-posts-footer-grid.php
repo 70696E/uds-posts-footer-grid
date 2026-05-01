@@ -652,10 +652,11 @@ class UDS_Posts_Footer_Grid {
     // RENDERING HTML GRIGLIA
     // ----------------------------------------------------------
 
-    private function render_grid( array $group ): string {
-        if ( empty( $group['cards'] ) ) return '';
+    private function render_grid( array $group, int $post_id = 0 ): string {
+        $cards = apply_filters( 'uds_pfg_cards', $group['cards'], $post_id );
+        if ( empty( $cards ) ) return '';
 
-        $titolo = $this->get_titolo();
+        $titolo = apply_filters( 'uds_pfg_titolo_sezione', $this->get_titolo() );
 
         ob_start();
         ?>
@@ -663,8 +664,8 @@ class UDS_Posts_Footer_Grid {
             <?php if ( $titolo ) : ?>
                 <h3 class="uds-pfg-titolo"><?php echo esc_html( $titolo ); ?></h3>
             <?php endif; ?>
-            <div class="uds-pfg-griglia" style="--uds-pfg-cols:<?php echo min( count( $group['cards'] ), 3 ); ?>">
-                <?php foreach ( $group['cards'] as $card ) :
+            <div class="uds-pfg-griglia" style="--uds-pfg-cols:<?php echo min( count( $cards ), 3 ); ?>">
+                <?php foreach ( $cards as $card ) :
                     $has_btn = ! empty( $card['testo_btn'] );
                 ?>
                     <?php if ( $has_btn ) : ?>
@@ -709,10 +710,11 @@ class UDS_Posts_Footer_Grid {
         if ( ! in_array( get_post_type(), $this->config['post_types'], true ) ) return $content;
         if ( ! is_single() ) return $content;
 
-        $group = $this->get_group_for_post( get_the_ID() );
+        $post_id = get_the_ID();
+        $group   = $this->get_group_for_post( $post_id );
         if ( ! $group ) return $content;
 
-        return $content . $this->render_grid( $group );
+        return $content . $this->render_grid( $group, $post_id );
     }
 
     // ----------------------------------------------------------
@@ -736,5 +738,15 @@ class UDS_Posts_Footer_Grid {
 // ============================================================
 // AVVIO
 // ============================================================
+
+register_uninstall_hook( __FILE__, 'uds_pfg_uninstall' );
+
+function uds_pfg_uninstall() {
+    $config = UDS_PFG_CONFIG;
+    delete_option( $config['opt_groups'] );
+    delete_option( $config['opt_map'] );
+    delete_option( $config['opt_overrides'] );
+    delete_option( 'uds_pfg_settings' );
+}
 
 ( new UDS_Posts_Footer_Grid( UDS_PFG_CONFIG ) )->init();
