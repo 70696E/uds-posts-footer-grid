@@ -597,7 +597,7 @@ class UDS_Posts_Footer_Grid {
             <?php if ( $titolo ) : ?>
                 <h3 class="uds-pfg-titolo"><?php echo esc_html( $titolo ); ?></h3>
             <?php endif; ?>
-            <div class="uds-pfg-griglia" style="--uds-pfg-cols:<?php echo count( $group['cards'] ); ?>">
+            <div class="uds-pfg-griglia" style="--uds-pfg-cols:<?php echo min( count( $group['cards'] ), 3 ); ?>">
                 <?php foreach ( $group['cards'] as $card ) : ?>
                     <a class="uds-pfg-card" href="<?php echo esc_url( $card['link'] ); ?>">
                         <?php if ( $card['immagine_url'] ) : ?>
