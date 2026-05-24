@@ -196,11 +196,12 @@ class UDS_Posts_Footer_Grid {
 
         foreach ( $raw as $g ) {
             $group = [
-                'id'      => sanitize_key( $g['id'] ),
-                'nome'    => sanitize_text_field( $g['nome'] ),
-                'titolo'  => sanitize_text_field( $g['titolo'] ?? '' ),
-                'default' => isset( $g['default'] ) ? 1 : 0,
-                'cards'   => [],
+                'id'           => sanitize_key( $g['id'] ),
+                'nome'         => sanitize_text_field( $g['nome'] ),
+                'titolo'       => sanitize_text_field( $g['titolo'] ?? '' ),
+                'utm_campaign' => sanitize_text_field( $g['utm_campaign'] ?? '' ),
+                'default'      => isset( $g['default'] ) ? 1 : 0,
+                'cards'        => [],
             ];
             foreach ( $g['cards'] ?? [] as $c ) {
                 $group['cards'][] = [
@@ -262,6 +263,7 @@ class UDS_Posts_Footer_Grid {
     private function save_settings() {
         $settings = [
             'titolo_sezione' => sanitize_text_field( wp_unslash( $_POST['titolo_sezione'] ?? '' ) ),
+            'utm_enabled'    => ! empty( $_POST['utm_enabled'] ) ? 1 : 0,
         ];
         update_option( 'uds_pfg_settings', $settings );
         $this->redirect_saved( 'settings' );
@@ -398,6 +400,20 @@ class UDS_Posts_Footer_Grid {
                         </td>
                     </tr>
                     <tr>
+                        <th>UTM Campaign</th>
+                        <td>
+                            <input type="text" name="groups[<?php echo $gi; ?>][utm_campaign]"
+                                   value="<?php echo esc_attr( $group['utm_campaign'] ?? '' ); ?>"
+                                   class="regular-text"
+                                   placeholder="Lascia vuoto per usare il nome del gruppo">
+                            <p class="description">
+                                Sovrascrive <code>utm_campaign</code> per questo gruppo.
+                                Utile se usi nomi campagna specifici in Google Analytics.
+                                Attivo solo se i parametri UTM sono abilitati in <em>Impostazioni</em>.
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
                         <th>Gruppo default</th>
                         <td>
                             <label>
@@ -500,7 +516,10 @@ class UDS_Posts_Footer_Grid {
     // ----------------------------------------------------------
 
     private function render_tab_settings() {
-        $titolo = $this->get_titolo();
+        $titolo      = $this->get_titolo();
+        $settings    = get_option( 'uds_pfg_settings', [] );
+        $utm_enabled = ! empty( $settings['utm_enabled'] );
+        $utm_source  = parse_url( home_url(), PHP_URL_HOST );
         ?>
         <form method="post">
             <?php wp_nonce_field( 'uds_pfg_save' ); ?>
@@ -516,6 +535,25 @@ class UDS_Posts_Footer_Grid {
                         <p class="description">
                             Testo visualizzato sopra la griglia nel frontend.
                             Lascia vuoto per nascondere il titolo.
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row">Parametri UTM</th>
+                    <td>
+                        <label>
+                            <input type="checkbox" name="utm_enabled" value="1"
+                                   <?php checked( $utm_enabled ); ?>>
+                            Attiva parametri UTM nei link delle card
+                        </label>
+                        <p class="description">
+                            Se attivato, aggiunge automaticamente a ogni link:<br>
+                            <code>utm_source=<?php echo esc_html( $utm_source ); ?></code>
+                            &nbsp;<code>utm_medium=footer_grid</code>
+                            &nbsp;<code>utm_campaign=[nome gruppo]</code>
+                            &nbsp;<code>utm_content=[titolo card]</code><br>
+                            Il campo <em>UTM Campaign</em> di ogni gruppo permette di
+                            sovrascrivere il nome campagna per quel gruppo specifico.
                         </p>
                     </td>
                 </tr>
@@ -710,6 +748,19 @@ class UDS_Posts_Footer_Grid {
         $titolo_comune = apply_filters( 'uds_pfg_titolo_sezione', $this->get_titolo() );
         $titolo        = ! empty( $group['titolo'] ) ? $group['titolo'] : $titolo_comune;
 
+        $settings    = get_option( 'uds_pfg_settings', [] );
+        $utm_enabled = ! empty( $settings['utm_enabled'] );
+        $utm_base    = [];
+        if ( $utm_enabled ) {
+            $utm_base = [
+                'utm_source'   => parse_url( home_url(), PHP_URL_HOST ),
+                'utm_medium'   => 'footer_grid',
+                'utm_campaign' => ! empty( $group['utm_campaign'] )
+                    ? $group['utm_campaign']
+                    : sanitize_title( $group['nome'] ),
+            ];
+        }
+
         ob_start();
         ?>
         <div class="uds-pfg-wrapper">
@@ -720,11 +771,20 @@ class UDS_Posts_Footer_Grid {
                 <?php foreach ( $cards as $card ) :
                     $has_btn  = ! empty( $card['testo_btn'] );
                     $has_link = ! empty( $card['link'] );
-                    // Card cliccabile solo se ha un link e non ha un bottone dedicato
                     $card_tag = ( ! $has_btn && $has_link ) ? 'a' : 'div';
+
+                    // Calcola il link con eventuali parametri UTM
+                    $link = $card['link'];
+                    if ( $has_link && $utm_enabled ) {
+                        $utm_content = sanitize_title( $card['titolo'] );
+                        $utm_args    = array_filter( array_merge( $utm_base, [
+                            'utm_content' => $utm_content,
+                        ] ) );
+                        $link = add_query_arg( $utm_args, $link );
+                    }
                 ?>
                     <?php if ( $card_tag === 'a' ) : ?>
-                    <a class="uds-pfg-card" href="<?php echo esc_url( $card['link'] ); ?>">
+                    <a class="uds-pfg-card" href="<?php echo esc_url( $link ); ?>">
                     <?php else : ?>
                     <div class="uds-pfg-card">
                     <?php endif; ?>
@@ -741,7 +801,7 @@ class UDS_Posts_Footer_Grid {
                         <?php endif; ?>
                         <?php if ( $has_btn ) : ?>
                             <?php if ( $has_link ) : ?>
-                                <a class="uds-pfg-card-btn" href="<?php echo esc_url( $card['link'] ); ?>">
+                                <a class="uds-pfg-card-btn" href="<?php echo esc_url( $link ); ?>">
                                     <?php echo esc_html( $card['testo_btn'] ); ?>
                                 </a>
                             <?php else : ?>
