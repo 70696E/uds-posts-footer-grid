@@ -1,4 +1,4 @@
-# UdS Posts Footer Grid
+# UdS Posts Footer Grid  `v1.2.0` — 2026-05-24
 
 Plugin WordPress che appende automaticamente una griglia di card suggerimento al fondo degli articoli del blog. Ogni card mostra immagine, titolo, descrizione e link. La griglia da mostrare si seleziona in base alla categoria dell'articolo, con possibilità di override per singolo post.
 
@@ -22,7 +22,7 @@ La costante in cima a `uds-posts-footer-grid.php` è l'unico punto da toccare pe
 define( 'UDS_PFG_CONFIG', [
 
     // Versione per cache busting CSS/JS — aggiornare ad ogni release
-    'version'        => '1.0.0',
+    'version'        => '1.2.0',
 
     // Chi può accedere al menu admin.
     // Stringa singola o array di capability e/o nomi di ruolo.
@@ -76,6 +76,8 @@ Il pannello ha quattro tab.
 Un **gruppo** è un insieme di card visualizzate insieme. Per ogni gruppo:
 
 - **Nome gruppo** — identificativo leggibile
+- **Titolo sezione** — titolo mostrato sopra la griglia per questo gruppo; se vuoto usa il titolo comune da Impostazioni
+- **UTM Campaign** — sovrascrive `utm_campaign` per questo gruppo (opzionale; attivo solo se UTM è abilitato in Impostazioni)
 - **Gruppo default** — usato quando nessuna categoria corrisponde; solo un gruppo può essere default
 - **Card** — ogni card ha: immagine (dalla media library), titolo, descrizione, link, testo bottone
 
@@ -100,7 +102,17 @@ Assegna un gruppo specifico a un singolo articolo tramite il suo ID. Ha priorit�
 
 ### Tab — Impostazioni
 
-Imposta il **titolo della sezione** visualizzato sopra la griglia nel frontend. Se lasciato vuoto, il titolo non appare. Il valore qui ha priorità su `titolo_sezione` in `UDS_PFG_CONFIG`.
+- **Titolo sezione** — testo visualizzato sopra la griglia nel frontend; fallback su `titolo_sezione` in `UDS_PFG_CONFIG`; vuoto = nessun titolo
+- **Parametri UTM** — checkbox per attivare l'aggiunta automatica dei parametri UTM a tutti i link. Quando attivo:
+
+| Parametro | Valore automatico | Override possibile |
+|---|---|---|
+| `utm_source` | dominio del sito (`home_url`) | — |
+| `utm_medium` | `footer_grid` (fisso) | — |
+| `utm_campaign` | nome del gruppo (slug) | campo UTM Campaign nel gruppo |
+| `utm_content` | titolo della card (slug) | — |
+
+La descrizione nel pannello mostra in anteprima i valori che verranno usati.
 
 ---
 
@@ -142,7 +154,7 @@ add_filter( 'uds_pfg_cards', function( array $cards, int $post_id ): array {
 | `uds_pfg_groups`    | Array dei gruppi di card                         |
 | `uds_pfg_cat_map`   | Mappa categorie → gruppi, ordinata per peso      |
 | `uds_pfg_overrides` | Override per post ID                             |
-| `uds_pfg_settings`  | Impostazioni generali (es. titolo sezione)       |
+| `uds_pfg_settings`  | Impostazioni generali: `titolo_sezione`, `utm_enabled` |
 
 Tutte le chiavi vengono eliminate automaticamente se il plugin viene disinstallato da WordPress (*Plugin → Elimina*).
 
@@ -150,9 +162,11 @@ Tutte le chiavi vengono eliminate automaticamente se il plugin viene disinstalla
 
 ```json
 {
-  "id": "grp_abc123",
-  "nome": "Costellazioni",
-  "default": 0,
+  "id":           "grp_abc123",
+  "nome":         "Costellazioni",
+  "titolo":       "Scopri le nostre costellazioni",
+  "utm_campaign": "costellazioni-corsi",
+  "default":      0,
   "cards": [
     {
       "immagine_id":  1234,

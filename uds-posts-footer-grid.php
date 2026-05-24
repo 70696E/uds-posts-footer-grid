@@ -2,7 +2,7 @@
 /**
  * Plugin Name: UdS Posts Footer Grid
  * Description: Inserisce una griglia di suggerimenti al fondo degli articoli del blog, configurabile per categoria.
- * Version:     1.0.0
+ * Version:     1.2.0
  * Author:      UdS
  * License:     GPL-2.0-or-later
  * Text Domain: uds-posts-footer-grid
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 define( 'UDS_PFG_CONFIG', [
 
     // Versione — aggiornare ad ogni release per invalidare cache CSS/JS
-    'version'         => '1.0.0',
+    'version'         => '1.2.0',
 
     // Capability o ruoli autorizzati ad accedere alla pagina di amministrazione.
     // Accetta una stringa singola o un array di capability e/o nomi di ruolo.

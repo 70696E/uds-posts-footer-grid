@@ -1,4 +1,12 @@
 
+20260524 v1.2.0
+- Parametri UTM automatici nei link (checkbox in Impostazioni)
+  utm_source=dominio, utm_medium=footer_grid, utm_campaign=nome gruppo,
+  utm_content=titolo card. Campo UTM Campaign opzionale per gruppo.
+- Titolo sezione configurabile per singolo gruppo
+- Varie correzioni: apostrofi/backslash, link vuoti, URL relativi,
+  sottolineatura link da tema, cap colonne, fallback gruppo default
+
 20260501 Il codice è passato a Claude Code.
 Claude Code: https://claude.ai/code/session_01FZwxALFvmUJgSJ5D9JUDHQ
 GitHub:      https://github.com/70696E/uds-posts-footer-grid
