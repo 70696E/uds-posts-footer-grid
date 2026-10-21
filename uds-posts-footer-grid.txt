@@ -1,3 +1,11 @@
+20261021 v1.3.0
+- Avvisi sui link delle card nel tab Gruppi di card: contenuto non
+  pubblicato, indirizzo che non porta a niente, "&amp;" al posto di "&".
+  Riepilogo in cima, segno sul gruppo e sulla card, motivo sotto il link.
+  Solo nell'amministrazione: sul sito le card non cambiano.
+- Filtro uds_pfg_avvisi_link per aggiungere altri motivi
+  (lo usa pin-uds-custom-2026, ritocco avvisi_griglia_articoli).
+
 
 20260524 v1.2.0
 - Parametri UTM automatici nei link (checkbox in Impostazioni)

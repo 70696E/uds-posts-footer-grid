@@ -1,4 +1,4 @@
-# UdS Posts Footer Grid  `v1.2.0` — 2026-05-24
+# UdS Posts Footer Grid  `v1.3.0` — 2026-10-21
 
 Plugin WordPress che appende automaticamente una griglia di card suggerimento al fondo degli articoli del blog. Ogni card mostra immagine, titolo, descrizione e link. La griglia da mostrare si seleziona in base alla categoria dell'articolo, con possibilità di override per singolo post.
 
@@ -22,7 +22,7 @@ La costante in cima a `uds-posts-footer-grid.php` è l'unico punto da toccare pe
 define( 'UDS_PFG_CONFIG', [
 
     // Versione per cache busting CSS/JS — aggiornare ad ogni release
-    'version'        => '1.2.0',
+    'version'        => '1.3.0',
 
     // Chi può accedere al menu admin.
     // Stringa singola o array di capability e/o nomi di ruolo.
@@ -92,6 +92,20 @@ Un **gruppo** è un insieme di card visualizzate insieme. Per ogni gruppo:
 
 Il link accetta URL assoluti (`https://...`) e relativi (`/percorso/pagina`).
 
+**Link da controllare** (v1.3.0). Aprendo il tab, il plugin guarda il link di ogni card
+che porta al sito stesso e, se qualcosa non va, lo scrive sotto il campo Link, accanto
+al titolo della card e del gruppo, e in un riepilogo in cima:
+
+- porta a un contenuto **non pubblicato** (bozza, privato, cestino);
+- **non porta a niente** che WordPress conosca: né un contenuto, né l'archivio di un
+  tipo di contenuto, né una categoria che esiste (se c'è un reindirizzamento il link
+  funziona lo stesso, ma conviene scrivere l'indirizzo nuovo);
+- contiene `&amp;` al posto di `&` (copiato dal codice HTML).
+
+I link verso altri siti non si controllano. Sul sito le card restano come sono: gli
+avvisi sono solo qui. Altri plugin aggiungono i loro motivi col filtro
+`uds_pfg_avvisi_link` (sotto).
+
 ### Tab — Categorie
 
 Tabella con tutte le categorie del sito. Per ciascuna si sceglie il gruppo da usare e un **Peso** (numero intero). Se un articolo appartiene a più categorie, viene usata la prima corrispondenza in ordine di peso crescente (peso 10 prima di peso 20). Le categorie lasciate su *— nessuno (usa default) —* non contribuiscono alla selezione.
@@ -143,6 +157,14 @@ add_filter( 'uds_pfg_cards', function( array $cards, int $post_id ): array {
     // es. rimuovi la prima card su certi post
     return $cards;
 }, 10, 2 );
+
+// Aggiunge motivi agli avvisi sui link delle card (solo nell'amministrazione)
+// $avvisi = frasi già trovate, $link = indirizzo assoluto,
+// $post_id = contenuto a cui porta (anche non pubblicato), 0 se nessuno
+add_filter( 'uds_pfg_avvisi_link', function( array $avvisi, string $link, int $post_id ): array {
+    // es. il contenuto è pubblicato ma nascosto da un altro plugin
+    return $avvisi;
+}, 10, 3 );
 ```
 
 ---

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: UdS Posts Footer Grid
  * Description: Inserisce una griglia di suggerimenti al fondo degli articoli del blog, configurabile per categoria.
- * Version:     1.2.0
+ * Version:     1.3.0
  * Author:      UdS
  * License:     GPL-2.0-or-later
  * Text Domain: uds-posts-footer-grid
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 define( 'UDS_PFG_CONFIG', [
 
     // Versione — aggiornare ad ogni release per invalidare cache CSS/JS
-    'version'         => '1.2.0',
+    'version'         => '1.3.0',
 
     // Capability o ruoli autorizzati ad accedere alla pagina di amministrazione.
     // Accetta una stringa singola o un array di capability e/o nomi di ruolo.
@@ -338,14 +338,43 @@ class UDS_Posts_Footer_Grid {
     private function render_tab_groups( array $groups ) {
         $empty_group = [ 'id' => '', 'nome' => '', 'default' => 0, 'cards' => [] ];
         $empty_card  = [ 'immagine_id' => '', 'immagine_url' => '', 'titolo' => '', 'descrizione' => '', 'link' => '' ];
+
+        // I link da controllare, card per card, e il riepilogo per gruppo.
+        $avvisi    = [];
+        $riepilogo = [];
+        foreach ( $groups as $gi => $group ) {
+            foreach ( $group['cards'] as $ci => $card ) {
+                $trovati = $this->avvisi_link( (string) ( $card['link'] ?? '' ) );
+                if ( $trovati ) {
+                    $avvisi[ $gi ][ $ci ] = $trovati;
+                    $nome = $group['nome'] ?: 'Senza nome';
+                    $riepilogo[ $nome ] = ( $riepilogo[ $nome ] ?? 0 ) + 1;
+                }
+            }
+        }
         ?>
+        <?php if ( $riepilogo ) : ?>
+            <div class="notice notice-warning inline">
+                <p>
+                    <strong><?php echo esc_html( sprintf( 'Card con il link da controllare: %d.', array_sum( $riepilogo ) ) ); ?></strong>
+                    <?php
+                    echo esc_html( implode( ', ', array_map(
+                        fn( $nome, $n ) => "$nome ($n)",
+                        array_keys( $riepilogo ),
+                        $riepilogo
+                    ) ) );
+                    ?>
+                    — il motivo è scritto sotto il link di ogni card.
+                </p>
+            </div>
+        <?php endif; ?>
         <form method="post" id="uds-pfg-groups-form">
             <?php wp_nonce_field( 'uds_pfg_save' ); ?>
             <input type="hidden" name="uds_pfg_action" value="save_groups">
 
             <div id="uds-pfg-groups-list">
                 <?php foreach ( $groups as $gi => $group ) : ?>
-                    <?php $this->render_group( $gi, $group ); ?>
+                    <?php $this->render_group( $gi, $group, $avvisi[ $gi ] ?? [] ); ?>
                 <?php endforeach; ?>
             </div>
 
@@ -363,7 +392,7 @@ class UDS_Posts_Footer_Grid {
         <?php
     }
 
-    private function render_group( $gi, array $group ) {
+    private function render_group( $gi, array $group, array $avvisi = [] ) {
         // Per i template (id vuoto) usa il placeholder __ID__, sostituito via JS con un ID univoco.
         $group_id = $group['id'] ?: '__ID__';
         ?>
@@ -371,6 +400,9 @@ class UDS_Posts_Footer_Grid {
             <div class="uds-pfg-group-header">
                 <span class="uds-pfg-drag-handle">☰</span>
                 <strong class="uds-pfg-group-label"><?php echo esc_html( $group['nome'] ?: 'Nuovo gruppo' ); ?></strong>
+                <?php if ( $avvisi ) : ?>
+                    <span class="uds-pfg-avviso"><?php echo esc_html( sprintf( '⚠ link da controllare: %d', count( $avvisi ) ) ); ?></span>
+                <?php endif; ?>
                 <button type="button" class="button-link uds-pfg-toggle-group">▼</button>
                 <button type="button" class="button-link-delete uds-pfg-remove-group">Elimina</button>
             </div>
@@ -427,7 +459,7 @@ class UDS_Posts_Footer_Grid {
                 <h4>Card del gruppo</h4>
                 <div class="uds-pfg-cards-list">
                     <?php foreach ( $group['cards'] as $ci => $card ) : ?>
-                        <?php $this->render_card( $gi, $ci, $card ); ?>
+                        <?php $this->render_card( $gi, $ci, $card, $avvisi[ $ci ] ?? [] ); ?>
                     <?php endforeach; ?>
                 </div>
                 <button type="button" class="button uds-pfg-add-card" data-gi="<?php echo esc_attr( $gi ); ?>">
@@ -438,13 +470,16 @@ class UDS_Posts_Footer_Grid {
         <?php
     }
 
-    private function render_card( $gi, $ci, array $card ) {
+    private function render_card( $gi, $ci, array $card, array $avvisi = [] ) {
         $testo_btn = $card['testo_btn'] ?? '';
         ?>
         <div class="uds-pfg-card" data-ci="<?php echo esc_attr( $ci ); ?>">
             <div class="uds-pfg-card-header">
                 <span class="uds-pfg-drag-handle">☰</span>
                 <span class="uds-pfg-card-label"><?php echo esc_html( $card['titolo'] ?: 'Nuova card' ); ?></span>
+                <?php if ( $avvisi ) : ?>
+                    <span class="uds-pfg-avviso">⚠ link da controllare</span>
+                <?php endif; ?>
                 <button type="button" class="button-link-delete uds-pfg-remove-card">Rimuovi</button>
             </div>
             <div class="uds-pfg-card-body">
@@ -490,6 +525,13 @@ class UDS_Posts_Footer_Grid {
                                    value="<?php echo esc_url( $card['link'] ); ?>"
                                    class="large-text"
                                    placeholder="https://... oppure /percorso/relativo">
+                            <?php if ( $avvisi ) : ?>
+                                <ul class="uds-pfg-avvisi">
+                                    <?php foreach ( $avvisi as $avviso ) : ?>
+                                        <li>⚠ <?php echo esc_html( $avviso ); ?></li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            <?php endif; ?>
                         </td>
                     </tr>
                     <tr>
@@ -693,6 +735,115 @@ class UDS_Posts_Footer_Grid {
             <?php submit_button( 'Salva override' ); ?>
         </form>
         <?php
+    }
+
+    // ----------------------------------------------------------
+    // CONTROLLO DEI LINK — avvisi nella pagina di amministrazione
+    // ----------------------------------------------------------
+
+    /**
+     * Che cosa non va nel link di una card, visto da WordPress: frasi brevi,
+     * nessuna se il link porta a un contenuto pubblicato, a una categoria che
+     * esiste, a un archivio, o fuori dal sito (lì non si controlla).
+     *
+     * Solo nella pagina di amministrazione: sul sito le card restano come sono.
+     * Un link a un contenuto che non c'è più può funzionare lo stesso, se un
+     * reindirizzamento lo porta altrove; l'avviso serve a scrivere l'indirizzo
+     * nuovo, non a nascondere la card.
+     *
+     * Altri plugin aggiungono i loro motivi col filtro uds_pfg_avvisi_link
+     * (array $avvisi, string $link assoluto, int $post_id o 0).
+     */
+    private function avvisi_link( string $link ): array {
+        $link = trim( $link );
+        if ( $link === '' ) return [];
+
+        if ( str_starts_with( $link, '/' ) && ! str_starts_with( $link, '//' ) ) {
+            $link = home_url( $link );
+        }
+        if ( ! $this->link_del_sito( $link ) ) return [];
+
+        $avvisi   = [];
+        $percorso = $this->percorso( $link );
+
+        // "&amp;" copiato dal codice HTML: il parametro dopo non vale più.
+        if ( str_contains( $link, '&amp;' ) ) {
+            $avvisi[] = 'nel link c\'è "&amp;" al posto di "&": i parametri che seguono non valgono';
+        }
+
+        $post_id = url_to_postid( $link );
+        if ( ! $post_id && $percorso !== '' ) {
+            // url_to_postid trova solo ciò che si vede: le bozze si cercano per nome.
+            $post_id = $this->contenuto_dal_percorso( $percorso );
+        }
+
+        if ( $post_id ) {
+            $stato = (string) get_post_status( $post_id );
+            if ( $stato !== 'publish' ) {
+                $oggetto  = get_post_status_object( $stato );
+                $avvisi[] = sprintf(
+                    'porta a un contenuto non pubblicato (%s)',
+                    mb_strtolower( $oggetto ? $oggetto->label : $stato )
+                );
+            }
+        } elseif ( $percorso !== '' && ! $this->percorso_riconosciuto( $percorso ) ) {
+            $avvisi[] = 'non porta a un contenuto né a una categoria del sito; se c\'è un reindirizzamento funziona, ma conviene scrivere l\'indirizzo nuovo';
+        }
+
+        return array_values( array_filter( array_map(
+            'strval',
+            (array) apply_filters( 'uds_pfg_avvisi_link', $avvisi, $link, (int) $post_id )
+        ) ) );
+    }
+
+    /** Stesso sito, con o senza "www.". */
+    private function link_del_sito( string $link ): bool {
+        $host = wp_parse_url( $link, PHP_URL_HOST );
+        $casa = wp_parse_url( home_url(), PHP_URL_HOST );
+        if ( ! $host || ! $casa ) return false;
+        $senza_www = fn( string $h ): string => preg_replace( '/^www\./i', '', strtolower( $h ) );
+        return $senza_www( $host ) === $senza_www( $casa );
+    }
+
+    /** Il percorso del link rispetto alla home, senza barre ai lati. */
+    private function percorso( string $link ): string {
+        $percorso = trim( (string) wp_parse_url( $link, PHP_URL_PATH ), '/' );
+        $base     = trim( (string) wp_parse_url( home_url(), PHP_URL_PATH ), '/' );
+        if ( $base !== '' && str_starts_with( $percorso . '/', $base . '/' ) ) {
+            $percorso = trim( substr( $percorso, strlen( $base ) ), '/' );
+        }
+        return $percorso;
+    }
+
+    /**
+     * Un contenuto in qualunque stato (bozza, privato, cestino) dal percorso:
+     * "prefisso del tipo/nome", oppure pagina o articolo senza prefisso.
+     */
+    private function contenuto_dal_percorso( string $percorso ): int {
+        foreach ( get_post_types( [ 'public' => true ], 'objects' ) as $tipo ) {
+            $prefisso = is_array( $tipo->rewrite ) ? trim( (string) ( $tipo->rewrite['slug'] ?? '' ), '/' ) : '';
+            if ( $prefisso === '' || ! str_starts_with( $percorso . '/', $prefisso . '/' ) ) continue;
+            $resto = trim( substr( $percorso, strlen( $prefisso ) ), '/' );
+            $post  = $resto !== '' ? get_page_by_path( $resto, OBJECT, $tipo->name ) : null;
+            if ( $post ) return (int) $post->ID;
+        }
+        $post = get_page_by_path( $percorso, OBJECT, [ 'page', 'post' ] );
+        return $post ? (int) $post->ID : 0;
+    }
+
+    /** Archivio di un tipo di contenuto, o di una categoria che esiste. */
+    private function percorso_riconosciuto( string $percorso ): bool {
+        foreach ( get_post_types( [ 'public' => true ] ) as $tipo ) {
+            $archivio = get_post_type_archive_link( $tipo );
+            if ( $archivio && $this->percorso( $archivio ) === $percorso ) return true;
+        }
+        foreach ( get_taxonomies( [ 'public' => true ], 'objects' ) as $tassonomia ) {
+            $prefisso = is_array( $tassonomia->rewrite ) ? trim( (string) ( $tassonomia->rewrite['slug'] ?? '' ), '/' ) : '';
+            if ( $prefisso === '' || ! str_starts_with( $percorso . '/', $prefisso . '/' ) ) continue;
+            $parti = explode( '/', $percorso );
+            return (bool) get_term_by( 'slug', end( $parti ), $tassonomia->name );
+        }
+        return false;
     }
 
     // ----------------------------------------------------------
