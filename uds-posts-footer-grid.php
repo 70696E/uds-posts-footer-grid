@@ -519,8 +519,20 @@ class UDS_Posts_Footer_Grid {
                         <td>
                             <div class="uds-pfg-ricerca">
                                 <select class="uds-pfg-fonte" aria-label="Dove cercare">
-                                    <?php foreach ( $this->fonti_ricerca() as $valore => $etichetta ) : ?>
-                                        <option value="<?php echo esc_attr( $valore ); ?>"><?php echo esc_html( $etichetta ); ?></option>
+                                    <?php
+                                    $fonti = $this->fonti_ricerca();
+                                    foreach ( [
+                                        'Contenuti'        => fn( $v ) => ! str_starts_with( $v, 'tax:' ),
+                                        'Categorie e tag'  => fn( $v ) => str_starts_with( $v, 'tax:' ),
+                                    ] as $gruppo => $appartiene ) :
+                                        $scelte = array_filter( $fonti, $appartiene, ARRAY_FILTER_USE_KEY );
+                                        if ( ! $scelte ) continue;
+                                        ?>
+                                        <optgroup label="<?php echo esc_attr( $gruppo ); ?>">
+                                            <?php foreach ( $scelte as $valore => $etichetta ) : ?>
+                                                <option value="<?php echo esc_attr( $valore ); ?>"><?php echo esc_html( $etichetta ); ?></option>
+                                            <?php endforeach; ?>
+                                        </optgroup>
                                     <?php endforeach; ?>
                                 </select>
                                 <input type="search" class="uds-pfg-cerca regular-text"
@@ -884,19 +896,29 @@ class UDS_Posts_Footer_Grid {
      * Filtro uds_pfg_fonti_ricerca per toglierne o aggiungerne.
      */
     private function fonti_ricerca(): array {
+        // Una volta per pagina: serve a ogni card.
+        static $calcolate = null;
+        if ( $calcolate !== null ) return $calcolate;
+
         $fonti = [];
         foreach ( get_post_types( [ 'public' => true ], 'objects' ) as $tipo ) {
             if ( $tipo->name === 'attachment' ) continue;
             $fonti[ $tipo->name ] = $tipo->labels->name;
         }
         foreach ( get_taxonomies( [ 'public' => true, 'show_ui' => true ], 'objects' ) as $tassonomia ) {
-            $fonti[ 'tax:' . $tassonomia->name ] = $tassonomia->labels->name;
+            // Fra parentesi i contenuti a cui appartiene: due "Tag" non si confondono.
+            $di = [];
+            foreach ( (array) $tassonomia->object_type as $tipo ) {
+                $oggetto_tipo = get_post_type_object( $tipo );
+                if ( $oggetto_tipo ) $di[] = $oggetto_tipo->labels->name;
+            }
+            $fonti[ 'tax:' . $tassonomia->name ] = $tassonomia->labels->name . ( $di ? ' (' . implode( ', ', $di ) . ')' : '' );
         }
         // Le pagine per prime: sono la scelta più comune.
         if ( isset( $fonti['page'] ) ) {
             $fonti = [ 'page' => $fonti['page'] ] + $fonti;
         }
-        return (array) apply_filters( 'uds_pfg_fonti_ricerca', $fonti );
+        return $calcolate = (array) apply_filters( 'uds_pfg_fonti_ricerca', $fonti );
     }
 
     /**
