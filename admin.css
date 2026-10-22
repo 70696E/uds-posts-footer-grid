@@ -234,7 +234,8 @@
     white-space: nowrap;
 }
 
-.uds-pfg-chiudi-risultati {
+.uds-pfg-chiudi-risultati,
+.uds-pfg-altri {
     margin: 0.3em 0.4em;
 }
 

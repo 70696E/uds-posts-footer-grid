@@ -118,3 +118,11 @@ modifiche è in `uds-posts-footer-grid.txt` e nei commit.
   uno ripetuto (lo stesso articolo in due righe: vale la prima): ora è segnalato.
 - I link delle card verso **categorie di corsi** sparite erano già coperti dagli avvisi
   (1.3: "non porta a niente"; 1.4: card agganciata a un contenuto che non c'è più).
+- Provato su st5 (Sergio, 22/10): un override aggiunto in fondo per un articolo che
+  aveva già una riga non aveva effetto, e lo si scopriva solo dopo il salvataggio:
+  l'avviso ora compare subito, scegliendo l'articolo.
+- **1.5.1** (Sergio): la ricerca partiva solo con "Cerca", e mostrava al massimo 20
+  risultati; ora parte entrando nel campo (anche vuoto), con "Mostra altri 20"; e si
+  chiude senza scegliere con Esc, con un clic fuori o con "Chiudi i risultati" (negli
+  override "Cambia" si annulla). "Usato da" non conta le righe ripetute.
+

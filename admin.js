@@ -210,6 +210,9 @@ document.addEventListener( 'DOMContentLoaded', function () {
             var tmplOv = document.getElementById( 'tmpl-override-row' );
             var htmlOv = tmplOv.innerHTML.replace( /__OI__/g, overrideCounter++ );
             document.getElementById( 'uds-pfg-overrides-body' ).insertAdjacentHTML( 'beforeend', htmlOv );
+            // Il cursore nel campo della riga nuova: la ricerca parte da sola.
+            var campoNuovo = document.querySelector( '#uds-pfg-overrides-body .uds-pfg-override-row:last-child .uds-pfg-cerca' );
+            if ( campoNuovo ) campoNuovo.focus();
             return;
         }
 
@@ -245,8 +248,13 @@ document.addEventListener( 'DOMContentLoaded', function () {
             if ( ! ricerca.hidden ) ricerca.querySelector( '.uds-pfg-cerca' ).focus();
             return;
         }
+        if ( t.matches( '.uds-pfg-altri' ) ) {
+            var boxAltri = t.closest( '.uds-pfg-risultati' );
+            cerca( t.closest( CONTENITORI_RICERCA ), ( boxAltri.pagina || 1 ) + 1 );
+            return;
+        }
         if ( t.matches( '.uds-pfg-chiudi-risultati' ) ) {
-            t.closest( '.uds-pfg-risultati' ).innerHTML = '';
+            chiudiRicerca( t.closest( CONTENITORI_RICERCA ) );
             return;
         }
 
@@ -298,20 +306,28 @@ document.addEventListener( 'DOMContentLoaded', function () {
         }
     }
 
-    function cerca( card ) {
+    // pagina 1: risultati nuovi; dalla 2 ("Mostra altri") si aggiungono in coda.
+    function cerca( card, pagina ) {
+        pagina   = pagina || 1;
         var box  = card.querySelector( '.uds-pfg-risultati' );
         var body = new FormData();
         body.append( 'action', 'uds_pfg_cerca' );
         body.append( '_ajax_nonce', dati.nonce || '' );
         body.append( 'fonte', card.querySelector( '.uds-pfg-fonte' ).value );
         body.append( 'q', card.querySelector( '.uds-pfg-cerca' ).value );
-        box.innerHTML = '<p class="uds-pfg-cercando">Cerco…</p>';
+        body.append( 'pagina', pagina );
+        if ( pagina === 1 ) {
+            box.innerHTML = '<p class="uds-pfg-cercando">Cerco…</p>';
+        } else {
+            var altri = box.querySelector( '.uds-pfg-altri' );
+            if ( altri ) { altri.disabled = true; altri.textContent = 'Cerco…'; }
+        }
 
         fetch( dati.ajaxUrl, { method: 'POST', credentials: 'same-origin', body: body } )
             .then( function ( r ) { return r.json(); } )
             .then( function ( risposta ) {
                 if ( ! risposta || ! risposta.success ) throw new Error( 'ricerca' );
-                mostraRisultati( box, risposta.data );
+                mostraRisultati( box, risposta.data.risultati, risposta.data.altri, pagina );
             } )
             .catch( function () {
                 box.innerHTML = '<p class="uds-pfg-errore">La ricerca non ha funzionato: ricarica la pagina e riprova.</p>';
@@ -325,16 +341,25 @@ document.addEventListener( 'DOMContentLoaded', function () {
         return el;
     }
 
-    function mostraRisultati( box, risultati ) {
-        box.innerHTML  = '';
-        box.risultati  = risultati;
-        if ( ! risultati.length ) {
-            box.appendChild( elemento( 'p', 'uds-pfg-nessuno', 'Nessun risultato.' ) );
+    function mostraRisultati( box, risultati, altri, pagina ) {
+        var primo = 0;
+        if ( pagina > 1 && box.risultati ) {
+            // In coda: via i comandi in fondo, si rimettono dopo.
+            box.querySelectorAll( '.uds-pfg-altri, .uds-pfg-chiudi-risultati' ).forEach( function ( el ) { el.remove(); } );
+            primo         = box.risultati.length;
+            box.risultati = box.risultati.concat( risultati );
+        } else {
+            box.innerHTML = '';
+            box.risultati = risultati;
+            if ( ! risultati.length ) {
+                box.appendChild( elemento( 'p', 'uds-pfg-nessuno', 'Nessun risultato.' ) );
+            }
         }
+        box.pagina = pagina;
         risultati.forEach( function ( r, i ) {
             var b = elemento( 'button', 'uds-pfg-risultato' );
             b.type      = 'button';
-            b.dataset.i = i;
+            b.dataset.i = primo + i;
             if ( r.anteprima ) {
                 var img = elemento( 'img' );
                 img.src = r.anteprima;
@@ -354,10 +379,24 @@ document.addEventListener( 'DOMContentLoaded', function () {
             b.appendChild( testo );
             box.appendChild( b );
         } );
+        if ( altri ) {
+            var piu = elemento( 'button', 'button uds-pfg-altri', 'Mostra altri 20' );
+            piu.type = 'button';
+            box.appendChild( piu );
+        }
         var chiudi = elemento( 'button', 'button-link uds-pfg-chiudi-risultati', 'Chiudi i risultati' );
         chiudi.type = 'button';
         box.appendChild( chiudi );
     }
+
+    // Entrando nel campo di ricerca, se non ci sono risultati, si cerca subito
+    // (col campo vuoto: gli ultimi), senza dover premere "Cerca".
+    document.addEventListener( 'focusin', function ( e ) {
+        if ( ! e.target.matches( '.uds-pfg-cerca' ) ) return;
+        var contenitore = e.target.closest( CONTENITORI_RICERCA );
+        var box         = contenitore && contenitore.querySelector( '.uds-pfg-risultati' );
+        if ( box && ! box.hasChildNodes() ) cerca( contenitore );
+    } );
 
     function riempi( card, r ) {
         var body = card.querySelector( '.uds-pfg-card-body' );
@@ -388,13 +427,49 @@ document.addEventListener( 'DOMContentLoaded', function () {
     }
 
     // Invio nel campo di ricerca: cerca, non salva il modulo.
+    // Esc nel campo o nei risultati: chiude senza scegliere.
     document.addEventListener( 'keydown', function ( e ) {
         if ( e.key === 'Enter' && e.target.matches( '.uds-pfg-cerca' ) ) {
             e.preventDefault();
             clearTimeout( attesa );
             cerca( e.target.closest( CONTENITORI_RICERCA ) );
         }
+        if ( e.key === 'Escape' && e.target.closest( '.uds-pfg-cerca, .uds-pfg-risultati' ) ) {
+            e.preventDefault();
+            clearTimeout( attesa );
+            chiudiRicerca( e.target.closest( CONTENITORI_RICERCA ) );
+        }
     } );
+
+    /**
+     * Chiude i risultati senza scegliere. In una riga degli override che ha già
+     * il suo articolo, chiude anche la ricerca aperta con "Cambia": l'articolo
+     * resta quello di prima.
+     */
+    function chiudiRicerca( contenitore ) {
+        if ( ! contenitore ) return;
+        var box = contenitore.querySelector( '.uds-pfg-risultati' );
+        if ( box ) { box.innerHTML = ''; box.risultati = null; }
+        var ricerca = contenitore.querySelector( '.uds-pfg-ov-ricerca' );
+        var id      = contenitore.querySelector( '.uds-pfg-ov-id' );
+        if ( ricerca && id && id.value ) {
+            ricerca.hidden = true;
+            var campo = ricerca.querySelector( '.uds-pfg-cerca' );
+            if ( campo ) campo.value = '';
+        }
+    }
+
+    // Un clic fuori dalla card o dalla riga chiude la sua ricerca aperta. In
+    // fase di cattura: prima che un clic su un risultato tolga l'elemento.
+    document.addEventListener( 'click', function ( e ) {
+        document.querySelectorAll( CONTENITORI_RICERCA ).forEach( function ( c ) {
+            if ( c.contains( e.target ) ) return;
+            var box     = c.querySelector( '.uds-pfg-risultati' );
+            var ricerca = c.querySelector( '.uds-pfg-ov-ricerca' );
+            var aperta  = ( box && box.hasChildNodes() ) || ( ricerca && ! ricerca.hidden );
+            if ( aperta ) chiudiRicerca( c );
+        } );
+    }, true );
 
     document.addEventListener( 'change', function ( e ) {
         if ( e.target.matches( '.uds-pfg-fonte' ) ) cerca( e.target.closest( CONTENITORI_RICERCA ) );

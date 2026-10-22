@@ -1,4 +1,4 @@
-# UdS Posts Footer Grid  `v1.5.0` — 2026-10-22
+# UdS Posts Footer Grid  `v1.5.1` — 2026-10-22
 
 Plugin WordPress che appende automaticamente una griglia di card suggerimento al fondo degli articoli del blog. Ogni card mostra immagine, titolo, descrizione e link. La griglia da mostrare si seleziona in base alla categoria dell'articolo, con possibilità di override per singolo post.
 
@@ -22,7 +22,7 @@ La costante in cima a `uds-posts-footer-grid.php` è l'unico punto da toccare pe
 define( 'UDS_PFG_CONFIG', [
 
     // Versione per cache busting CSS/JS — aggiornare ad ogni release
-    'version'        => '1.5.0',
+    'version'        => '1.5.1',
 
     // Chi può accedere al menu admin.
     // Stringa singola o array di capability e/o nomi di ruolo.
@@ -98,8 +98,10 @@ restano interi.
 **Riempi da…** (v1.4.0). In cima a ogni card: si sceglie dove cercare (pagine,
 articoli, ogni altro tipo di contenuto pubblico — con Tutor corsi e pacchetti — e le
 categorie), si scrive una parola del titolo (vuoto: gli ultimi modificati) e compaiono
-fino a 20 risultati, con la copertina, lo stato (privato) e, per le categorie, il numero
-di elementi. Un clic riempie titolo, descrizione (l'estratto, 25 parole), link e
+20 risultati alla volta (*Mostra altri 20* per i successivi), con la copertina, lo stato
+(privato) e, per le categorie, il numero di elementi. La ricerca parte appena si entra
+nel campo, anche vuoto, e si chiude senza scegliere con Esc, con *Chiudi i risultati* o
+con un clic fuori (v1.5.1). Un clic riempie titolo, descrizione (l'estratto, 25 parole), link e
 immagine; poi tutto si può ritoccare.
 
 **Card agganciata** (v1.4.0). Una card riempita così ricorda il contenuto o la categoria
