@@ -2,7 +2,7 @@
 /**
  * Plugin Name: UdS Posts Footer Grid
  * Description: Inserisce una griglia di suggerimenti al fondo degli articoli del blog, configurabile per categoria.
- * Version:     1.5.0
+ * Version:     1.5.1
  * Author:      UdS
  * License:     GPL-2.0-or-later
  * Text Domain: uds-posts-footer-grid
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 define( 'UDS_PFG_CONFIG', [
 
     // Versione — aggiornare ad ogni release per invalidare cache CSS/JS
-    'version'         => '1.5.0',
+    'version'         => '1.5.1',
 
     // Capability o ruoli autorizzati ad accedere alla pagina di amministrazione.
     // Accetta una stringa singola o un array di capability e/o nomi di ruolo.
@@ -1100,6 +1100,10 @@ class UDS_Posts_Footer_Grid {
 
         $fonte  = sanitize_text_field( wp_unslash( $_POST['fonte'] ?? '' ) );
         $parola = sanitize_text_field( wp_unslash( $_POST['q'] ?? '' ) );
+        // A pagine di 20: se ce ne sono altri, lo script mostra "Mostra altri".
+        $pagina = max( 1, absint( $_POST['pagina'] ?? 1 ) );
+        $per    = 20;
+        $salta  = ( $pagina - 1 ) * $per;
         if ( ! array_key_exists( $fonte, $this->fonti_ricerca() ) ) {
             wp_send_json_error( 'Origine della ricerca sconosciuta.', 400 );
         }
@@ -1112,7 +1116,8 @@ class UDS_Posts_Footer_Grid {
                 'taxonomy'   => $tassonomia,
                 'hide_empty' => false,
                 'search'     => $parola,
-                'number'     => 20,
+                'number'     => $per + 1,
+                'offset'     => $salta,
                 'orderby'    => 'name',
             ] );
             foreach ( is_wp_error( $termini ) ? [] : $termini as $termine ) {
@@ -1137,7 +1142,8 @@ class UDS_Posts_Footer_Grid {
                 'search_columns'      => [ 'post_title', 'post_excerpt' ],
                 'orderby'             => $parola === '' ? 'modified' : 'relevance',
                 'order'               => 'DESC',
-                'posts_per_page'      => 20,
+                'posts_per_page'      => $per + 1,
+                'offset'              => $salta,
                 'no_found_rows'       => true,
                 'ignore_sticky_posts' => true,
             ] );
@@ -1156,7 +1162,11 @@ class UDS_Posts_Footer_Grid {
             }
         }
 
-        wp_send_json_success( $risultati );
+        // Uno in più di quelli chiesti: dice se c'è un'altra pagina.
+        wp_send_json_success( [
+            'risultati' => array_slice( $risultati, 0, $per ),
+            'altri'     => count( $risultati ) > $per,
+        ] );
     }
 
     /** Completa un risultato: immagini, tipo, note dei filtri. */
