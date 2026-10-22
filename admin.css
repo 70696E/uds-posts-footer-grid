@@ -110,3 +110,50 @@
 .uds-pfg-card-body.is-hidden {
     display: none;
 }
+
+/* Versione accanto al titolo (v1.3.0) */
+.uds-pfg-versione {
+    font-size: 0.55em;
+    font-weight: 400;
+    color: #787c82;
+    vertical-align: middle;
+}
+
+/* Comandi dei gruppi: chiudi tutti, solo questo, apri / chiudi (v1.3.0) */
+.uds-pfg-comandi-lista {
+    margin: 0 0 1em;
+}
+
+.uds-pfg-group-comandi {
+    display: inline-flex;
+    gap: 0.4em;
+}
+
+.uds-pfg-toggle-group {
+    transition: transform 0.15s;
+}
+
+.uds-pfg-group.is-chiuso .uds-pfg-toggle-group {
+    transform: rotate(-90deg);
+}
+
+.uds-pfg-group.is-chiuso .uds-pfg-group-header {
+    border-bottom: none;
+    border-radius: 4px;
+}
+
+/* Avvisi sui link (v1.3.0) */
+.uds-pfg-avviso {
+    color: #b32d2e;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.uds-pfg-avvisi {
+    margin: 0.4em 0 0;
+    color: #b32d2e;
+}
+
+.uds-pfg-avvisi li {
+    margin: 0 0 0.2em;
+}

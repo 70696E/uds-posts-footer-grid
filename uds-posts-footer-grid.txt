@@ -1,3 +1,17 @@
+20261021 v1.3.0
+- Avvisi sui link delle card nel tab Gruppi di card: contenuto non
+  pubblicato, indirizzo che non porta a niente, "&amp;" al posto di "&".
+  Riepilogo in cima, segno sul gruppo e sulla card, motivo sotto il link.
+  Solo nell'amministrazione: sul sito le card non cambiano.
+- Filtro uds_pfg_avvisi_link per aggiungere altri motivi
+  (lo usa pin-uds-custom-2026, ritocco avvisi_griglia_articoli).
+- Gruppi: "Chiudi tutti" / "Apri tutti" in cima, "Chiudi tutti" e
+  "Apri solo questo" in ogni gruppo; si apre e chiude cliccando su tutta
+  l'intestazione; i gruppi chiusi restano chiusi dopo il salvataggio
+  (sessionStorage). Versione accanto al titolo della pagina.
+- CSS e JS con la data del file nella versione dell'indirizzo: le
+  modifiche arrivano al browser senza svuotare la cache.
+
 
 20260524 v1.2.0
 - Parametri UTM automatici nei link (checkbox in Impostazioni)
