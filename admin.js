@@ -254,7 +254,7 @@ document.addEventListener( 'DOMContentLoaded', function () {
             return;
         }
         if ( t.matches( '.uds-pfg-chiudi-risultati' ) ) {
-            t.closest( '.uds-pfg-risultati' ).innerHTML = '';
+            chiudiRicerca( t.closest( CONTENITORI_RICERCA ) );
             return;
         }
 
@@ -427,13 +427,49 @@ document.addEventListener( 'DOMContentLoaded', function () {
     }
 
     // Invio nel campo di ricerca: cerca, non salva il modulo.
+    // Esc nel campo o nei risultati: chiude senza scegliere.
     document.addEventListener( 'keydown', function ( e ) {
         if ( e.key === 'Enter' && e.target.matches( '.uds-pfg-cerca' ) ) {
             e.preventDefault();
             clearTimeout( attesa );
             cerca( e.target.closest( CONTENITORI_RICERCA ) );
         }
+        if ( e.key === 'Escape' && e.target.closest( '.uds-pfg-cerca, .uds-pfg-risultati' ) ) {
+            e.preventDefault();
+            clearTimeout( attesa );
+            chiudiRicerca( e.target.closest( CONTENITORI_RICERCA ) );
+        }
     } );
+
+    /**
+     * Chiude i risultati senza scegliere. In una riga degli override che ha già
+     * il suo articolo, chiude anche la ricerca aperta con "Cambia": l'articolo
+     * resta quello di prima.
+     */
+    function chiudiRicerca( contenitore ) {
+        if ( ! contenitore ) return;
+        var box = contenitore.querySelector( '.uds-pfg-risultati' );
+        if ( box ) { box.innerHTML = ''; box.risultati = null; }
+        var ricerca = contenitore.querySelector( '.uds-pfg-ov-ricerca' );
+        var id      = contenitore.querySelector( '.uds-pfg-ov-id' );
+        if ( ricerca && id && id.value ) {
+            ricerca.hidden = true;
+            var campo = ricerca.querySelector( '.uds-pfg-cerca' );
+            if ( campo ) campo.value = '';
+        }
+    }
+
+    // Un clic fuori dalla card o dalla riga chiude la sua ricerca aperta. In
+    // fase di cattura: prima che un clic su un risultato tolga l'elemento.
+    document.addEventListener( 'click', function ( e ) {
+        document.querySelectorAll( CONTENITORI_RICERCA ).forEach( function ( c ) {
+            if ( c.contains( e.target ) ) return;
+            var box     = c.querySelector( '.uds-pfg-risultati' );
+            var ricerca = c.querySelector( '.uds-pfg-ov-ricerca' );
+            var aperta  = ( box && box.hasChildNodes() ) || ( ricerca && ! ricerca.hidden );
+            if ( aperta ) chiudiRicerca( c );
+        } );
+    }, true );
 
     document.addEventListener( 'change', function ( e ) {
         if ( e.target.matches( '.uds-pfg-fonte' ) ) cerca( e.target.closest( CONTENITORI_RICERCA ) );

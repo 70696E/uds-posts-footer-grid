@@ -1,6 +1,9 @@
 20261022 v1.5.1
 - Ricerca: parte appena si entra nel campo (anche vuoto: gli ultimi);
-  "Mostra altri 20" sotto i risultati.
+  "Mostra altri 20" sotto i risultati. Si chiude senza scegliere con Esc,
+  con "Chiudi i risultati" o con un clic fuori: negli override "Cambia"
+  si annulla e l'articolo resta quello di prima.
+- "Usato da": un articolo ripetuto negli override conta una volta sola.
 
 20261022 v1.5.0
 - Override: l'articolo si cerca per titolo; avvisi per articolo sparito,

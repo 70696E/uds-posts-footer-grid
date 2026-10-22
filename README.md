@@ -100,7 +100,8 @@ articoli, ogni altro tipo di contenuto pubblico — con Tutor corsi e pacchetti 
 categorie), si scrive una parola del titolo (vuoto: gli ultimi modificati) e compaiono
 20 risultati alla volta (*Mostra altri 20* per i successivi), con la copertina, lo stato
 (privato) e, per le categorie, il numero di elementi. La ricerca parte appena si entra
-nel campo, anche vuoto (v1.5.1). Un clic riempie titolo, descrizione (l'estratto, 25 parole), link e
+nel campo, anche vuoto, e si chiude senza scegliere con Esc, con *Chiudi i risultati* o
+con un clic fuori (v1.5.1). Un clic riempie titolo, descrizione (l'estratto, 25 parole), link e
 immagine; poi tutto si può ritoccare.
 
 **Card agganciata** (v1.4.0). Una card riempita così ricorda il contenuto o la categoria

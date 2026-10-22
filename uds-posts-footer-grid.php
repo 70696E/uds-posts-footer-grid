@@ -939,7 +939,11 @@ class UDS_Posts_Footer_Grid {
             $categoria = get_term_by( 'slug', $m['slug'], 'category' );
             if ( $categoria ) $uso[ $m['group_id'] ]['categorie'][] = $categoria->name;
         }
+        $contati = [];
         foreach ( $overrides as $o ) {
+            // Un articolo ripetuto conta solo nella prima riga, l'unica che vale.
+            if ( isset( $contati[ (int) $o['post_id'] ] ) ) continue;
+            $contati[ (int) $o['post_id'] ] = true;
             if ( isset( $uso[ $o['group_id'] ] ) && get_post( (int) $o['post_id'] ) ) {
                 $uso[ $o['group_id'] ]['articoli'][] = $this->testo( get_the_title( (int) $o['post_id'] ) );
             }
