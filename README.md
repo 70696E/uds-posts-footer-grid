@@ -98,8 +98,10 @@ al titolo della card e del gruppo, e in un riepilogo in cima:
 
 - porta a un contenuto **non pubblicato** (bozza, privato, cestino);
 - **non porta a niente** che WordPress conosca: né un contenuto, né l'archivio di un
-  tipo di contenuto, né una categoria che esiste (se c'è un reindirizzamento il link
-  funziona lo stesso, ma conviene scrivere l'indirizzo nuovo);
+  tipo di contenuto, né una categoria che esiste (se il sito lo reindirizza, con una
+  regola o perché WordPress indovina un indirizzo simile, il link funziona lo stesso,
+  ma conviene scrivere l'indirizzo giusto: per esempio `journaling_videocorso`, col
+  trattino basso, al posto di `journaling-videocorso`);
 - contiene `&amp;` al posto di `&` (copiato dal codice HTML).
 
 I link verso altri siti non si controllano. Sul sito le card restano come sono: gli

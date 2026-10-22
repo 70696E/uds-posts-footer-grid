@@ -787,7 +787,7 @@ class UDS_Posts_Footer_Grid {
                 );
             }
         } elseif ( $percorso !== '' && ! $this->percorso_riconosciuto( $percorso ) ) {
-            $avvisi[] = 'non porta a un contenuto né a una categoria del sito; se c\'è un reindirizzamento funziona, ma conviene scrivere l\'indirizzo nuovo';
+            $avvisi[] = 'non porta a un contenuto né a una categoria del sito; se il sito lo reindirizza (una regola, o WordPress che indovina un indirizzo simile) funziona, ma conviene scrivere l\'indirizzo giusto';
         }
 
         return array_values( array_filter( array_map(
