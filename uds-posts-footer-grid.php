@@ -2,7 +2,7 @@
 /**
  * Plugin Name: UdS Posts Footer Grid
  * Description: Inserisce una griglia di suggerimenti al fondo degli articoli del blog, configurabile per categoria.
- * Version:     1.4.1
+ * Version:     1.5.0
  * Author:      UdS
  * License:     GPL-2.0-or-later
  * Text Domain: uds-posts-footer-grid
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 define( 'UDS_PFG_CONFIG', [
 
     // Versione — aggiornare ad ogni release per invalidare cache CSS/JS
-    'version'         => '1.4.1',
+    'version'         => '1.5.0',
 
     // Capability o ruoli autorizzati ad accedere alla pagina di amministrazione.
     // Accetta una stringa singola o un array di capability e/o nomi di ruolo.
@@ -388,7 +388,7 @@ class UDS_Posts_Footer_Grid {
             <div class="uds-pfg-tab-content">
                 <?php
                 match ( $tab ) {
-                    'groups'   => $this->render_tab_groups( $groups ),
+                    'groups'   => $this->render_tab_groups( $groups, $map, $overrides ),
                     'map'      => $this->render_tab_map( $groups, $map ),
                     'overrides'=> $this->render_tab_overrides( $groups, $overrides ),
                     'settings' => $this->render_tab_settings(),
@@ -404,7 +404,8 @@ class UDS_Posts_Footer_Grid {
     // TAB 1 — GRUPPI DI CARD
     // ----------------------------------------------------------
 
-    private function render_tab_groups( array $groups ) {
+    private function render_tab_groups( array $groups, array $map = [], array $overrides = [] ) {
+        $uso = $this->uso_gruppi( $groups, $map, $overrides );
         $empty_group = [ 'id' => '', 'nome' => '', 'default' => 0, 'cards' => [] ];
         $empty_card  = [ 'immagine_id' => '', 'immagine_url' => '', 'titolo' => '', 'descrizione' => '', 'link' => '', 'aggancio' => '' ];
 
@@ -451,7 +452,7 @@ class UDS_Posts_Footer_Grid {
 
             <div id="uds-pfg-groups-list">
                 <?php foreach ( $groups as $gi => $group ) : ?>
-                    <?php $this->render_group( $gi, $group, $avvisi[ $gi ] ?? [] ); ?>
+                    <?php $this->render_group( $gi, $group, $avvisi[ $gi ] ?? [], $uso[ $group['id'] ] ?? null ); ?>
                 <?php endforeach; ?>
             </div>
 
@@ -469,7 +470,7 @@ class UDS_Posts_Footer_Grid {
         <?php
     }
 
-    private function render_group( $gi, array $group, array $avvisi = [] ) {
+    private function render_group( $gi, array $group, array $avvisi = [], ?array $uso = null ) {
         // Per i template (id vuoto) usa il placeholder __ID__, sostituito via JS con un ID univoco.
         $group_id = $group['id'] ?: '__ID__';
         ?>
@@ -479,6 +480,12 @@ class UDS_Posts_Footer_Grid {
                 <strong class="uds-pfg-group-label"><?php echo esc_html( $group['nome'] ?: 'Nuovo gruppo' ); ?></strong>
                 <?php if ( $avvisi ) : ?>
                     <span class="uds-pfg-avviso"><?php echo esc_html( sprintf( '⚠ link da controllare: %d', count( $avvisi ) ) ); ?></span>
+                <?php endif; ?>
+                <?php if ( $uso !== null ) : ?>
+                    <span class="uds-pfg-uso <?php echo $uso['testo'] === '' ? 'is-inutile' : ''; ?>"
+                          title="<?php echo esc_attr( $uso['dettaglio'] ); ?>">
+                        <?php echo esc_html( $uso['testo'] !== '' ? 'usato da: ' . $uso['testo'] : '⚠ non lo usa nessuna categoria né articolo' ); ?>
+                    </span>
                 <?php endif; ?>
                 <span class="uds-pfg-group-comandi">
                     <button type="button" class="button button-small uds-pfg-chiudi-tutti">Chiudi tutti</button>
@@ -753,6 +760,7 @@ class UDS_Posts_Footer_Grid {
                         <th style="width:80px">Peso</th>
                         <th>Categoria</th>
                         <th>Slug</th>
+                        <th style="width:80px">Articoli</th>
                         <th>Gruppo</th>
                     </tr>
                 </thead>
@@ -770,6 +778,7 @@ class UDS_Posts_Footer_Grid {
                             </td>
                             <td><?php echo esc_html( $cat->name ); ?></td>
                             <td><code><?php echo esc_html( $cat->slug ); ?></code></td>
+                            <td><?php echo esc_html( (string) $cat->count ); ?></td>
                             <td>
                                 <select name="cat_map[<?php echo $i; ?>][group_id]">
                                     <option value="">— nessuno (usa default) —</option>
@@ -786,6 +795,23 @@ class UDS_Posts_Footer_Grid {
                     <?php endforeach; ?>
                 </tbody>
             </table>
+            <?php
+            // Categorie tolte dal blog: la loro riga resta salvata ma non vale più.
+            $esistenti = wp_list_pluck( $categories, 'slug' );
+            $sparite   = array_filter( $map, fn( $m ) => ! empty( $m['group_id'] ) && ! in_array( $m['slug'], $esistenti, true ) );
+            $nomi      = array_column( $groups, 'nome', 'id' );
+            if ( $sparite ) : ?>
+                <div class="notice notice-info inline">
+                    <p><strong>Categorie che non ci sono più</strong> (ma erano assegnate a un gruppo):
+                    <?php echo esc_html( implode( ', ', array_map(
+                        fn( $m ) => $m['slug'] . ' → ' . ( $nomi[ $m['group_id'] ] ?? $m['group_id'] ),
+                        $sparite
+                    ) ) ); ?>.
+                    Non valgono più; spariscono da qui al prossimo <em>Salva mappa categorie</em>.
+                    Gli articoli che erano in quelle categorie ora prendono il gruppo delle altre loro
+                    categorie, o quello predefinito.</p>
+                </div>
+            <?php endif; ?>
             <br>
             <?php submit_button( 'Salva mappa categorie' ); ?>
         </form>
@@ -797,71 +823,138 @@ class UDS_Posts_Footer_Grid {
     // ----------------------------------------------------------
 
     private function render_tab_overrides( array $groups, array $overrides ) {
+        // Lo stesso articolo in più righe: vale la prima.
+        $volte = array_count_values( array_map( fn( $o ) => (int) $o['post_id'], $overrides ) );
         ?>
         <form method="post">
             <?php wp_nonce_field( 'uds_pfg_save' ); ?>
             <input type="hidden" name="uds_pfg_action" value="save_overrides">
-            <p>Assegna un gruppo specifico a un singolo articolo. Ha priorità assoluta sulla categoria.</p>
+            <p>Assegna un gruppo specifico a un singolo articolo. Ha priorità assoluta sulla categoria.
+            L'articolo si cerca per titolo.</p>
 
             <table class="widefat fixed striped">
                 <thead>
                     <tr>
-                        <th style="width:130px">Post ID</th>
-                        <th>Titolo post</th>
-                        <th>Gruppo</th>
+                        <th>Articolo</th>
+                        <th style="width:30%">Gruppo</th>
                         <th style="width:80px"></th>
                     </tr>
                 </thead>
                 <tbody id="uds-pfg-overrides-body">
-                    <?php foreach ( $overrides as $oi => $ov ) : ?>
-                        <tr class="uds-pfg-override-row">
-                            <td>
-                                <input type="number" name="overrides[<?php echo $oi; ?>][post_id]"
-                                       value="<?php echo esc_attr( $ov['post_id'] ); ?>"
-                                       style="width:100px" min="1">
-                            </td>
-                            <td><?php echo esc_html( get_the_title( $ov['post_id'] ) ?: '—' ); ?></td>
-                            <td>
-                                <select name="overrides[<?php echo $oi; ?>][group_id]">
-                                    <?php foreach ( $groups as $g ) : ?>
-                                        <option value="<?php echo esc_attr( $g['id'] ); ?>"
-                                                <?php selected( $ov['group_id'], $g['id'] ); ?>>
-                                            <?php echo esc_html( $g['nome'] ); ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </td>
-                            <td>
-                                <button type="button" class="button-link-delete uds-pfg-remove-override">Rimuovi</button>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
+                    <?php
+                    $gia_visti = [];
+                    foreach ( $overrides as $oi => $ov ) {
+                        $id    = (int) $ov['post_id'];
+                        $doppio = ( $volte[ $id ] ?? 0 ) > 1 && isset( $gia_visti[ $id ] );
+                        $gia_visti[ $id ] = true;
+                        $this->render_riga_override( $oi, $ov, $groups, $doppio );
+                    }
+                    ?>
                 </tbody>
             </table>
             <br>
             <button type="button" class="button" id="uds-pfg-add-override">+ Aggiungi override</button>
 
             <template id="tmpl-override-row">
-                <tr class="uds-pfg-override-row">
-                    <td><input type="number" name="overrides[__OI__][post_id]" style="width:100px" min="1"></td>
-                    <td>—</td>
-                    <td>
-                        <select name="overrides[__OI__][group_id]">
-                            <?php foreach ( $groups as $g ) : ?>
-                                <option value="<?php echo esc_attr( $g['id'] ); ?>">
-                                    <?php echo esc_html( $g['nome'] ); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </td>
-                    <td><button type="button" class="button-link-delete uds-pfg-remove-override">Rimuovi</button></td>
-                </tr>
+                <?php $this->render_riga_override( '__OI__', [ 'post_id' => 0, 'group_id' => '' ], $groups ); ?>
             </template>
 
             <br><br>
             <?php submit_button( 'Salva override' ); ?>
         </form>
         <?php
+    }
+
+    /** Una riga degli override: l'articolo (con la ricerca per cambiarlo) e il gruppo. */
+    private function render_riga_override( $oi, array $ov, array $groups, bool $doppio = false ) {
+        $id     = (int) $ov['post_id'];
+        $post   = $id ? get_post( $id ) : null;
+        $avvisi = [];
+        if ( $id && ! $post ) {
+            $avvisi[] = 'l\'articolo n. ' . $id . ' non esiste più: la riga non serve';
+        } elseif ( $post && $post->post_status !== 'publish' ) {
+            $stato    = get_post_status_object( $post->post_status );
+            $avvisi[] = 'articolo non pubblicato (' . mb_strtolower( $stato ? $stato->label : $post->post_status ) . ')';
+        }
+        if ( $doppio ) {
+            $avvisi[] = 'questo articolo è già in una riga più su, che vale al posto di questa: per cambiare gruppo cambialo lì, e togli questa riga';
+        }
+        $fonte = (string) ( $this->config['post_types'][0] ?? 'post' );
+        ?>
+        <tr class="uds-pfg-override-row">
+            <td>
+                <input type="hidden" name="overrides[<?php echo $oi; ?>][post_id]" class="uds-pfg-ov-id"
+                       value="<?php echo esc_attr( $id ?: '' ); ?>">
+                <p class="uds-pfg-ov-articolo" <?php echo $id ? '' : 'hidden'; ?>>
+                    <strong class="uds-pfg-ov-titolo"><?php echo esc_html( $post ? $this->testo( get_the_title( $post ) ) : ( $id ? '—' : '' ) ); ?></strong>
+                    <span class="uds-pfg-ov-numero"><?php echo $id ? esc_html( 'n. ' . $id ) : ''; ?></span>
+                    <button type="button" class="button-link uds-pfg-ov-cambia">Cambia</button>
+                </p>
+                <?php if ( $avvisi ) : ?>
+                    <ul class="uds-pfg-avvisi">
+                        <?php foreach ( $avvisi as $avviso ) : ?>
+                            <li>⚠ <?php echo esc_html( $avviso ); ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php endif; ?>
+                <div class="uds-pfg-ov-ricerca" <?php echo $id ? 'hidden' : ''; ?>>
+                    <div class="uds-pfg-ricerca">
+                        <input type="hidden" class="uds-pfg-fonte" value="<?php echo esc_attr( $fonte ); ?>">
+                        <input type="search" class="uds-pfg-cerca regular-text"
+                               placeholder="Una parola del titolo (vuoto: gli ultimi)"
+                               aria-label="Cerca l'articolo">
+                        <button type="button" class="button uds-pfg-cerca-btn">Cerca</button>
+                    </div>
+                    <div class="uds-pfg-risultati" aria-live="polite"></div>
+                </div>
+            </td>
+            <td>
+                <select name="overrides[<?php echo $oi; ?>][group_id]">
+                    <?php foreach ( $groups as $g ) : ?>
+                        <option value="<?php echo esc_attr( $g['id'] ); ?>"
+                                <?php selected( $ov['group_id'], $g['id'] ); ?>>
+                            <?php echo esc_html( $g['nome'] ); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </td>
+            <td>
+                <button type="button" class="button-link-delete uds-pfg-remove-override">Rimuovi</button>
+            </td>
+        </tr>
+        <?php
+    }
+
+    /**
+     * Chi usa ogni gruppo: predefinito, categorie, articoli. Per id del gruppo:
+     * 'testo' breve (vuoto se nessuno) e 'dettaglio' con i nomi, per il title.
+     */
+    private function uso_gruppi( array $groups, array $map, array $overrides ): array {
+        $uso = [];
+        foreach ( $groups as $g ) {
+            $uso[ $g['id'] ] = [ 'default' => ! empty( $g['default'] ), 'categorie' => [], 'articoli' => [] ];
+        }
+        foreach ( $map as $m ) {
+            if ( empty( $m['group_id'] ) || ! isset( $uso[ $m['group_id'] ] ) ) continue;
+            $categoria = get_term_by( 'slug', $m['slug'], 'category' );
+            if ( $categoria ) $uso[ $m['group_id'] ]['categorie'][] = $categoria->name;
+        }
+        foreach ( $overrides as $o ) {
+            if ( isset( $uso[ $o['group_id'] ] ) && get_post( (int) $o['post_id'] ) ) {
+                $uso[ $o['group_id'] ]['articoli'][] = $this->testo( get_the_title( (int) $o['post_id'] ) );
+            }
+        }
+        foreach ( $uso as &$u ) {
+            $parti = [];
+            if ( $u['default'] ) $parti[] = 'predefinito';
+            if ( $u['categorie'] ) $parti[] = count( $u['categorie'] ) === 1 ? '1 categoria' : count( $u['categorie'] ) . ' categorie';
+            if ( $u['articoli'] ) $parti[] = count( $u['articoli'] ) === 1 ? '1 articolo' : count( $u['articoli'] ) . ' articoli';
+            $u['testo']     = implode( ' · ', $parti );
+            $u['dettaglio'] = trim( ( $u['categorie'] ? 'Categorie: ' . implode( ', ', $u['categorie'] ) . "\n" : '' )
+                . ( $u['articoli'] ? 'Articoli: ' . implode( '; ', $u['articoli'] ) : '' ) );
+        }
+        unset( $u );
+        return $uso;
     }
 
     // ----------------------------------------------------------

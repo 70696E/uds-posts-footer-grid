@@ -1,4 +1,4 @@
-# UdS Posts Footer Grid  `v1.4.1` — 2026-10-22
+# UdS Posts Footer Grid  `v1.5.0` — 2026-10-22
 
 Plugin WordPress che appende automaticamente una griglia di card suggerimento al fondo degli articoli del blog. Ogni card mostra immagine, titolo, descrizione e link. La griglia da mostrare si seleziona in base alla categoria dell'articolo, con possibilità di override per singolo post.
 
@@ -22,7 +22,7 @@ La costante in cima a `uds-posts-footer-grid.php` è l'unico punto da toccare pe
 define( 'UDS_PFG_CONFIG', [
 
     // Versione per cache busting CSS/JS — aggiornare ad ogni release
-    'version'        => '1.4.1',
+    'version'        => '1.5.0',
 
     // Chi può accedere al menu admin.
     // Stringa singola o array di capability e/o nomi di ruolo.
@@ -151,13 +151,28 @@ e *Apri solo questo* (apre quel gruppo e chiude gli altri); in cima alla lista *
 e *Apri tutti*. I gruppi chiusi restano chiusi dopo *Salva gruppi*, finché la scheda del
 browser è aperta.
 
+**Chi usa il gruppo** (v1.5.0). Nell'intestazione di ogni gruppo: "usato da:
+predefinito · N categorie · N articoli" (passando col mouse, i nomi), oppure in rosso
+"non lo usa nessuna categoria né articolo": un gruppo così non compare in nessun
+articolo.
+
 ### Tab — Categorie
 
 Tabella con tutte le categorie del sito. Per ciascuna si sceglie il gruppo da usare e un **Peso** (numero intero). Se un articolo appartiene a più categorie, viene usata la prima corrispondenza in ordine di peso crescente (peso 10 prima di peso 20). Le categorie lasciate su *— nessuno (usa default) —* non contribuiscono alla selezione.
+La colonna **Articoli** dice quanti articoli ha ogni categoria (v1.5.0).
+
+**Categorie che non ci sono più** (v1.5.0). La mappa è salvata per slug: se una
+categoria del blog viene cancellata, la sua riga resta salvata ma non vale più. Sotto la
+tabella un riquadro elenca queste righe ("slug → gruppo"); spariscono al prossimo
+*Salva mappa categorie*. Gli articoli che erano lì prendono il gruppo delle loro altre
+categorie, o il predefinito.
 
 ### Tab — Override post
 
-Assegna un gruppo specifico a un singolo articolo tramite il suo ID. Ha priorità assoluta su categoria e default.
+Assegna un gruppo specifico a un singolo articolo. Ha priorità assoluta su categoria e
+default. Dalla v1.5.0 l'articolo si cerca per titolo (come in "Riempi da…") invece di
+scriverne il numero; *Cambia* riapre la ricerca. Avvisi: articolo che non esiste più,
+non pubblicato, o già in una riga sopra (vale la prima).
 
 ### Tab — Impostazioni
 

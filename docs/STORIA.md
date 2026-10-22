@@ -100,3 +100,21 @@ modifiche è in `uds-posts-footer-grid.txt` e nei commit.
   la faceva sparire subito.
 - **In produzione il 22/10** (www e st5 su `main`). Sergio ha rifatto le 8 card rotte di
   www con "Riempi da…": nessun avviso, 10 card agganciate su 25.
+
+## 6. Categorie sparite, override per titolo (22/10/2026, versione 1.5.0)
+
+- **La domanda** (Sergio): con la ristrutturazione diverse categorie non ci sono più;
+  come se ne accorge il plugin? La mappa è salvata per slug: una categoria cancellata
+  lascia una riga che non vale più, invisibile (la tabella mostra solo le categorie che
+  esistono) e tolta al salvataggio successivo. Gli articoli prendono allora il gruppo
+  delle altre categorie o il predefinito: niente si rompe, ma un gruppo può restare
+  senza nessuno che lo usa.
+- **Decisione**: renderlo visibile, non correggerlo da solo. Un riquadro elenca le
+  categorie sparite che avevano un gruppo; ogni gruppo dice chi lo usa (predefinito,
+  categorie, articoli) ed è in rosso se nessuno; la tabella delle categorie ha il
+  numero di articoli.
+- **Override per titolo**: prima si scriveva il numero dell'articolo. Ora si cerca come
+  in "Riempi da…" (stessa richiesta al server, tipo "post"). Su www c'erano 26 override,
+  uno ripetuto (lo stesso articolo in due righe: vale la prima): ora è segnalato.
+- I link delle card verso **categorie di corsi** sparite erano già coperti dagli avvisi
+  (1.3: "non porta a niente"; 1.4: card agganciata a un contenuto che non c'è più).

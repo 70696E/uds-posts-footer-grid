@@ -215,20 +215,34 @@ document.addEventListener( 'DOMContentLoaded', function () {
 
         // Rimuovi override
         if ( t.matches( '.uds-pfg-remove-override' ) ) {
+            var titoloOv = t.closest( 'tr' ).querySelector( '.uds-pfg-ov-titolo' );
+            titoloOv = titoloOv ? titoloOv.textContent.trim() : '';
+            if ( titoloOv && ! confirm( 'Togliere l\'override di «' + titoloOv + '»?' ) ) return;
             t.closest( 'tr' ).remove();
             return;
         }
 
         // Riempi da…: cerca, sceglie un risultato, chiude i risultati
         if ( t.matches( '.uds-pfg-cerca-btn' ) ) {
-            cerca( t.closest( '.uds-pfg-card' ) );
+            cerca( t.closest( CONTENITORI_RICERCA ) );
             return;
         }
         var risultato = t.closest( '.uds-pfg-risultato' );
         if ( risultato ) {
-            var box = risultato.closest( '.uds-pfg-risultati' );
-            riempi( risultato.closest( '.uds-pfg-card' ), box.risultati[ risultato.dataset.i ] );
+            var box  = risultato.closest( '.uds-pfg-risultati' );
+            var riga = risultato.closest( '.uds-pfg-override-row' );
+            if ( riga ) {
+                scegliArticolo( riga, box.risultati[ risultato.dataset.i ] );
+            } else {
+                riempi( risultato.closest( '.uds-pfg-card' ), box.risultati[ risultato.dataset.i ] );
+            }
             box.innerHTML = '';
+            return;
+        }
+        if ( t.matches( '.uds-pfg-ov-cambia' ) ) {
+            var ricerca = t.closest( '.uds-pfg-override-row' ).querySelector( '.uds-pfg-ov-ricerca' );
+            ricerca.hidden = ! ricerca.hidden;
+            if ( ! ricerca.hidden ) ricerca.querySelector( '.uds-pfg-cerca' ).focus();
             return;
         }
         if ( t.matches( '.uds-pfg-chiudi-risultati' ) ) {
@@ -250,6 +264,39 @@ document.addEventListener( 'DOMContentLoaded', function () {
 
     var dati   = window.udsPfg || {};
     var attesa = null;
+
+    // La ricerca sta nelle card dei gruppi e nelle righe degli override.
+    var CONTENITORI_RICERCA = '.uds-pfg-card, .uds-pfg-override-row';
+
+    // Override: l'articolo scelto dai risultati.
+    function scegliArticolo( riga, r ) {
+        var id = String( r.aggancio || '' ).replace( 'post:', '' );
+        riga.querySelector( '.uds-pfg-ov-id' ).value = id;
+        riga.querySelector( '.uds-pfg-ov-titolo' ).textContent = r.titolo;
+        riga.querySelector( '.uds-pfg-ov-numero' ).textContent = 'n. ' + id + ( r.stato ? ' · ' + r.stato : '' );
+        riga.querySelector( '.uds-pfg-ov-articolo' ).hidden = false;
+        riga.querySelector( '.uds-pfg-ov-ricerca' ).hidden  = true;
+        var vecchi = riga.querySelector( '.uds-pfg-avvisi' );
+        if ( vecchi ) vecchi.remove();
+        modificatoOverride = true;
+
+        // L'articolo ha già un'altra riga? Vale la prima dall'alto: dirlo subito,
+        // non dopo il salvataggio.
+        var righe = Array.prototype.slice.call( document.querySelectorAll( '#uds-pfg-overrides-body .uds-pfg-override-row' ) );
+        var altra = righe.filter( function ( r ) {
+            return r !== riga && r.querySelector( '.uds-pfg-ov-id' ).value === id;
+        } )[0];
+        if ( altra ) {
+            var prima  = righe.indexOf( altra ) < righe.indexOf( riga );
+            var gruppo = altra.querySelector( 'select' ).selectedOptions[0];
+            var lista  = elemento( 'ul', 'uds-pfg-avvisi' );
+            lista.appendChild( elemento( 'li', '', prima
+                ? '⚠ questo articolo ha già una riga più su (gruppo «' + ( gruppo ? gruppo.textContent.trim() : '' ) + '»), che vale al posto di questa: cambia il gruppo lì e togli questa riga'
+                : '⚠ questo articolo ha anche una riga più giù (gruppo «' + ( gruppo ? gruppo.textContent.trim() : '' ) + '»): vale questa, quella si può togliere' ) );
+            riga.querySelector( '.uds-pfg-ov-articolo' ).after( lista );
+            riga.scrollIntoView( { block: 'center' } );
+        }
+    }
 
     function cerca( card ) {
         var box  = card.querySelector( '.uds-pfg-risultati' );
@@ -345,12 +392,12 @@ document.addEventListener( 'DOMContentLoaded', function () {
         if ( e.key === 'Enter' && e.target.matches( '.uds-pfg-cerca' ) ) {
             e.preventDefault();
             clearTimeout( attesa );
-            cerca( e.target.closest( '.uds-pfg-card' ) );
+            cerca( e.target.closest( CONTENITORI_RICERCA ) );
         }
     } );
 
     document.addEventListener( 'change', function ( e ) {
-        if ( e.target.matches( '.uds-pfg-fonte' ) ) cerca( e.target.closest( '.uds-pfg-card' ) );
+        if ( e.target.matches( '.uds-pfg-fonte' ) ) cerca( e.target.closest( CONTENITORI_RICERCA ) );
     } );
 
     // ============================================================
@@ -496,8 +543,8 @@ document.addEventListener( 'DOMContentLoaded', function () {
         // Ricerca mentre si scrive, con una piccola attesa.
         if ( t.matches( '.uds-pfg-cerca' ) ) {
             clearTimeout( attesa );
-            var card = t.closest( '.uds-pfg-card' );
-            attesa = setTimeout( function () { cerca( card ); }, 400 );
+            var contenitore = t.closest( CONTENITORI_RICERCA );
+            attesa = setTimeout( function () { cerca( contenitore ); }, 400 );
             return;
         }
     } );
@@ -525,8 +572,22 @@ document.addEventListener( 'DOMContentLoaded', function () {
         moduloGruppi.addEventListener( 'dragend', segnaModifica );
     }
 
+    // Anche nella scheda degli override: un articolo scelto o un gruppo cambiato.
+    var modificatoOverride = false;
+    var moduloOverride = document.getElementById( 'uds-pfg-overrides-body' );
+    if ( moduloOverride ) {
+        moduloOverride = moduloOverride.closest( 'form' );
+        moduloOverride.addEventListener( 'change', function ( e ) {
+            if ( ! e.target.matches( '.uds-pfg-cerca, .uds-pfg-fonte' ) ) modificatoOverride = true;
+        } );
+        moduloOverride.addEventListener( 'click', function ( e ) {
+            if ( e.target.closest( '#uds-pfg-add-override, .uds-pfg-remove-override' ) ) modificatoOverride = true;
+        } );
+        moduloOverride.addEventListener( 'submit', function () { modificatoOverride = false; } );
+    }
+
     window.addEventListener( 'beforeunload', function ( e ) {
-        if ( ! modificato ) return;
+        if ( ! modificato && ! modificatoOverride ) return;
         e.preventDefault();
         e.returnValue = '';
     } );

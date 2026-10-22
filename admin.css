@@ -297,3 +297,30 @@
     border: 1px dashed #8c8f94;
     border-radius: 4px;
 }
+
+/* Chi usa il gruppo (v1.5.0) */
+.uds-pfg-uso {
+    color: #646970;
+    font-size: 0.9em;
+    white-space: nowrap;
+}
+
+.uds-pfg-uso.is-inutile {
+    color: #b32d2e;
+}
+
+/* Override: l'articolo scelto e la sua ricerca (v1.5.0) */
+.uds-pfg-ov-articolo {
+    margin: 0 0 0.3em;
+}
+
+.uds-pfg-ov-numero {
+    color: #646970;
+    margin: 0 0.4em;
+}
+
+.uds-pfg-ov-articolo[hidden],
+.uds-pfg-ov-ricerca[hidden] {
+    display: none;
+}
+
