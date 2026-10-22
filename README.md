@@ -290,12 +290,11 @@ Il plugin registra il menu con una capability virtuale interna (`uds_pfg_manage`
 
 ---
 
-## Sviluppi pianificati
+## Documenti per riprendere il lavoro
 
-- **Numero massimo di colonne** — campo nell'admin per impostare il cap (ora fisso a 3)
-- **Colori configurabili** — colore bordo card e testo bottone dall'admin, senza toccare il CSS
-- **Export/Import impostazioni** — scarica/carica la configurazione come JSON (utile per staging → produzione)
-- **Pulizia database** — pulsante nell'admin con conferma (alternativa all'uninstall hook)
+- `CLAUDE.md` — istruzioni per una sessione di lavoro: dove sta il plugin, regole, prove.
+- `docs/STORIA.md` — le versioni e le decisioni prese, con il perché.
+- `docs/BACKLOG.md` — ciò che resta da fare (idee e dati da sistemare nei siti).
 
 ---
 
