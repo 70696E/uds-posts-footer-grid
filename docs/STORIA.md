@@ -98,3 +98,5 @@ modifiche è in `uds-posts-footer-grid.txt` e nei commit.
   rileggere, confrontare e fondere: **non ora**, il blocco basta (in `docs/BACKLOG.md`).
 - "Rimuovi" di una card chiede conferma, come "Elimina" di un gruppo: un clic sbagliato
   la faceva sparire subito.
+- **In produzione il 22/10** (www e st5 su `main`). Sergio ha rifatto le 8 card rotte di
+  www con "Riempi da…": nessun avviso, 10 card agganciate su 25.
