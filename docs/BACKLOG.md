@@ -20,6 +20,11 @@ Quando una voce si chiude, si toglie da qui e si annota in `docs/STORIA.md`.
 
 ## Idee per il plugin
 
+- **Salvataggio con fusione**: oggi, se i gruppi sono stati salvati da un'altra parte
+  dopo l'apertura della pagina, non si salva (1.4.1). Si potrebbe salvare lo stesso
+  quando le due versioni hanno cambiato gruppi diversi (confronto per `id` del gruppo
+  fra la versione letta all'apertura, quella salvata e quella inviata). Non urgente.
+
 - **Anteprima della griglia** sotto ogni gruppo, come apparirà nell'articolo.
 - **La ricerca anche nel tab "Override post"**, che oggi chiede il numero dell'articolo.
 - **Esportare e importare i gruppi** (JSON), per portarli da st5 a www. Attenzione:

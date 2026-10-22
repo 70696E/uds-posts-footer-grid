@@ -164,6 +164,9 @@ document.addEventListener( 'DOMContentLoaded', function () {
         // Rimuovi card
         if ( t.matches( '.uds-pfg-remove-card' ) ) {
             e.stopPropagation();
+            // Come per i gruppi: un clic sbagliato non deve far sparire la card.
+            var titoloCard = t.closest( '.uds-pfg-card' ).querySelector( '.uds-pfg-card-titolo' ).value;
+            if ( ! confirm( 'Rimuovere la card' + ( titoloCard ? ' «' + titoloCard + '»' : '' ) + '?' ) ) return;
             t.closest( '.uds-pfg-card' ).remove();
             return;
         }

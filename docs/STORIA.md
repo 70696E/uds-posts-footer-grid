@@ -92,3 +92,9 @@ modifiche è in `uds-posts-footer-grid.txt` e nei commit.
   due versioni: con gruppi e card riordinabili, una fusione automatica sbaglierebbe.
 - In più il browser chiede conferma prima di lasciare la pagina con modifiche non
   salvate (la ricerca "Riempi da…" non conta).
+- Provato su st5 con due schede (Sergio, 22/10): "Non salvato" e la conferma all'uscita.
+  Sergio: sembra strano che "Salva gruppi" a volte salvi e a volte no; si potrebbe
+  salvare lo stesso quando le due versioni hanno cambiato gruppi diversi, ma vuol dire
+  rileggere, confrontare e fondere: **non ora**, il blocco basta (in `docs/BACKLOG.md`).
+- "Rimuovi" di una card chiede conferma, come "Elimina" di un gruppo: un clic sbagliato
+  la faceva sparire subito.

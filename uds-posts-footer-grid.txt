@@ -3,6 +3,7 @@
   persona dopo l'apertura della pagina, non si salva; la pagina ripresenta
   i gruppi inviati e si sceglie se salvarli o ricaricare.
 - Conferma del browser prima di lasciare la pagina con modifiche non salvate.
+- Conferma anche per "Rimuovi" di una card, come per i gruppi.
 
 20261022 v1.4.0
 - "Riempi da…" in ogni card: ricerca fra pagine, articoli, corsi,
