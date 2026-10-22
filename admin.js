@@ -279,6 +279,24 @@ document.addEventListener( 'DOMContentLoaded', function () {
         var vecchi = riga.querySelector( '.uds-pfg-avvisi' );
         if ( vecchi ) vecchi.remove();
         modificatoOverride = true;
+
+        // L'articolo ha già un'altra riga? Vale la prima dall'alto: dirlo subito,
+        // non dopo il salvataggio.
+        var righe = Array.prototype.slice.call( document.querySelectorAll( '#uds-pfg-overrides-body .uds-pfg-override-row' ) );
+        var altra = righe.filter( function ( r ) {
+            return r !== riga && r.querySelector( '.uds-pfg-ov-id' ).value === id;
+        } )[0];
+        if ( altra ) {
+            var prima  = righe.indexOf( altra ) < righe.indexOf( riga );
+            var gruppo = altra.querySelector( 'select' ).selectedOptions[0];
+            var lista  = elemento( 'ul', 'uds-pfg-avvisi' );
+            lista.appendChild( elemento( 'li', '', prima
+                ? '⚠ questo articolo ha già una riga più su (gruppo «' + ( gruppo ? gruppo.textContent.trim() : '' ) + '»), che vale al posto di questa: cambia il gruppo lì e togli questa riga'
+                : '⚠ questo articolo ha anche una riga più giù (gruppo «' + ( gruppo ? gruppo.textContent.trim() : '' ) + '»): vale questa, quella si può togliere' ) );
+            riga.querySelector( '.uds-pfg-ov-articolo' ).after( lista );
+            altra.scrollIntoView( { block: 'center' } );
+            riga.scrollIntoView( { block: 'center' } );
+        }
     }
 
     function cerca( card ) {

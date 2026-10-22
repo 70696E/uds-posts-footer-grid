@@ -1,6 +1,7 @@
 20261022 v1.5.0
 - Override: l'articolo si cerca per titolo; avvisi per articolo sparito,
   non pubblicato o ripetuto; conferma per "Rimuovi".
+  L'avviso della riga ripetuta compare subito, scegliendo l'articolo.
 - Gruppi: "usato da" nell'intestazione (predefinito, categorie, articoli),
   in rosso se nessuno lo usa.
 - Categorie: colonna con il numero di articoli; riquadro delle categorie

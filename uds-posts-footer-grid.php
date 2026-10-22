@@ -877,7 +877,7 @@ class UDS_Posts_Footer_Grid {
             $avvisi[] = 'articolo non pubblicato (' . mb_strtolower( $stato ? $stato->label : $post->post_status ) . ')';
         }
         if ( $doppio ) {
-            $avvisi[] = 'questo articolo è già in una riga sopra: vale quella';
+            $avvisi[] = 'questo articolo è già in una riga più su, che vale al posto di questa: per cambiare gruppo cambialo lì, e togli questa riga';
         }
         $fonte = (string) ( $this->config['post_types'][0] ?? 'post' );
         ?>
