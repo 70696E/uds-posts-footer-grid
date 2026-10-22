@@ -158,7 +158,7 @@ class UDS_Posts_Footer_Grid {
             'uds-pfg-admin',
             plugin_dir_url( __FILE__ ) . 'admin.js',
             [ 'media-upload' ],
-            $this->config['version'],
+            $this->versione_file( 'admin.js' ),
             true
         );
 
@@ -166,8 +166,18 @@ class UDS_Posts_Footer_Grid {
             'uds-pfg-admin',
             plugin_dir_url( __FILE__ ) . 'admin.css',
             [],
-            $this->config['version']
+            $this->versione_file( 'admin.css' )
         );
+    }
+
+    /**
+     * Versione di un file CSS o JS nell'indirizzo: quella del plugin più la data
+     * del file, così un aggiornamento arriva al browser anche senza cambiare
+     * numero di versione (senza, la copia in cache restava: visto il 22/10).
+     */
+    private function versione_file( string $file ): string {
+        $data = @filemtime( plugin_dir_path( __FILE__ ) . $file );
+        return $this->config['version'] . ( $data ? '.' . $data : '' );
     }
 
     // ----------------------------------------------------------
@@ -412,7 +422,7 @@ class UDS_Posts_Footer_Grid {
                 <?php endif; ?>
                 <span class="uds-pfg-group-comandi">
                     <button type="button" class="button button-small uds-pfg-chiudi-tutti">Chiudi tutti</button>
-                    <button type="button" class="button button-small uds-pfg-solo-questo">Solo questo</button>
+                    <button type="button" class="button button-small uds-pfg-solo-questo">Apri solo questo</button>
                 </span>
                 <button type="button" class="button-link uds-pfg-toggle-group" aria-expanded="true" title="Apri / chiudi">▼</button>
                 <button type="button" class="button-link-delete uds-pfg-remove-group">Elimina</button>
@@ -1010,7 +1020,7 @@ class UDS_Posts_Footer_Grid {
             'uds-pfg-frontend',
             plugin_dir_url( __FILE__ ) . 'frontend.css',
             [],
-            $this->config['version']
+            $this->versione_file( 'frontend.css' )
         );
     }
 

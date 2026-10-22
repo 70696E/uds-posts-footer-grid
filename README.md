@@ -110,7 +110,7 @@ avvisi sono solo qui. Altri plugin aggiungono i loro motivi col filtro
 
 **Aprire e chiudere i gruppi** (v1.3.0). Un clic su un punto qualunque dell'intestazione
 di un gruppo (o sulla freccia) lo apre o lo chiude; in ogni intestazione *Chiudi tutti*
-e *Solo questo* (apre quel gruppo e chiude gli altri); in cima alla lista *Chiudi tutti*
+e *Apri solo questo* (apre quel gruppo e chiude gli altri); in cima alla lista *Chiudi tutti*
 e *Apri tutti*. I gruppi chiusi restano chiusi dopo *Salva gruppi*, finché la scheda del
 browser è aperta.
 

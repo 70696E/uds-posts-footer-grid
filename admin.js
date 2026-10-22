@@ -63,7 +63,7 @@ document.addEventListener( 'DOMContentLoaded', function () {
             return;
         }
 
-        // Solo questo: apre il gruppo e chiude gli altri
+        // Apri solo questo: apre il gruppo e chiude gli altri
         if ( t.matches( '.uds-pfg-solo-questo' ) ) {
             var questo = t.closest( '.uds-pfg-group' );
             gruppi().forEach( function ( g ) { apriGruppo( g, g === questo ); } );
