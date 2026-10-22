@@ -1,4 +1,4 @@
-# UdS Posts Footer Grid  `v1.4.0` — 2026-10-22
+# UdS Posts Footer Grid  `v1.4.1` — 2026-10-22
 
 Plugin WordPress che appende automaticamente una griglia di card suggerimento al fondo degli articoli del blog. Ogni card mostra immagine, titolo, descrizione e link. La griglia da mostrare si seleziona in base alla categoria dell'articolo, con possibilità di override per singolo post.
 
@@ -22,7 +22,7 @@ La costante in cima a `uds-posts-footer-grid.php` è l'unico punto da toccare pe
 define( 'UDS_PFG_CONFIG', [
 
     // Versione per cache busting CSS/JS — aggiornare ad ogni release
-    'version'        => '1.4.0',
+    'version'        => '1.4.1',
 
     // Chi può accedere al menu admin.
     // Stringa singola o array di capability e/o nomi di ruolo.
@@ -115,6 +115,14 @@ gruppi fra loro, le card anche da un gruppo all'altro. Mentre si trascina si ved
 solo le intestazioni, e la pagina scorre da sola vicino al bordo alto o basso della
 finestra (la rotella, durante il trascinamento, il browser la ignora). L'ordine vale
 con *Salva gruppi*.
+
+**Salvataggio sicuro** (v1.4.1). *Salva gruppi* salva sempre **tutti** i gruppi insieme:
+una pagina aperta da tempo riscriverebbe le modifiche fatte nel frattempo da un'altra
+scheda o da un'altra persona. Per questo la pagina porta un'impronta dei gruppi letti
+all'apertura; se al salvataggio i gruppi salvati sono diversi, il plugin **non salva**,
+ripresenta i gruppi come li si era lasciati e lascia scegliere: salvarli così (al posto
+dell'altra versione) o ricaricare la pagina. Il browser chiede anche conferma prima di
+lasciare la pagina con modifiche non salvate.
 
 **Card aperte e chiuse** (v1.4.0). Come i gruppi: clic sull'intestazione o sulla
 freccia, *Chiudi tutte* e *Apri solo questa* (valgono per le card di quel gruppo); le

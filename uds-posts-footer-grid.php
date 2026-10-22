@@ -2,7 +2,7 @@
 /**
  * Plugin Name: UdS Posts Footer Grid
  * Description: Inserisce una griglia di suggerimenti al fondo degli articoli del blog, configurabile per categoria.
- * Version:     1.4.0
+ * Version:     1.4.1
  * Author:      UdS
  * License:     GPL-2.0-or-later
  * Text Domain: uds-posts-footer-grid
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 define( 'UDS_PFG_CONFIG', [
 
     // Versione — aggiornare ad ogni release per invalidare cache CSS/JS
-    'version'         => '1.4.0',
+    'version'         => '1.4.1',
 
     // Capability o ruoli autorizzati ad accedere alla pagina di amministrazione.
     // Accetta una stringa singola o un array di capability e/o nomi di ruolo.
@@ -246,8 +246,35 @@ class UDS_Posts_Footer_Grid {
         }
         unset( $g );
 
+        // Se i gruppi sono cambiati dopo l'apertura di questa pagina (un'altra
+        // scheda, un'altra persona), salvare cancellerebbe quelle modifiche:
+        // non si salva, e la pagina torna con i dati inviati, per decidere.
+        $impronta = sanitize_text_field( wp_unslash( $_POST['uds_pfg_impronta'] ?? '' ) );
+        if ( $impronta !== '' && ! hash_equals( $this->impronta_gruppi(), $impronta ) ) {
+            set_transient( $this->chiave_respinti(), $groups, HOUR_IN_SECONDS );
+            wp_redirect( add_query_arg( [
+                'page'      => 'uds-pfg',
+                'tab'       => 'groups',
+                'conflitto' => '1',
+            ], admin_url( 'admin.php' ) ) );
+            exit;
+        }
+
         update_option( $this->config['opt_groups'], $groups );
         $this->redirect_saved( 'groups' );
+    }
+
+    /**
+     * L'impronta dei gruppi salvati: va nella pagina all'apertura e si
+     * confronta al salvataggio (vedi save_groups).
+     */
+    private function impronta_gruppi(): string {
+        return md5( serialize( get_option( $this->config['opt_groups'], [] ) ) );
+    }
+
+    /** Dove restano, per un'ora, i gruppi non salvati per il conflitto. */
+    private function chiave_respinti(): string {
+        return 'uds_pfg_respinti_' . get_current_user_id();
     }
 
     private function save_map() {
@@ -313,12 +340,35 @@ class UDS_Posts_Footer_Grid {
         $groups    = get_option( $this->config['opt_groups'], [] );
         $map       = get_option( $this->config['opt_map'], [] );
         $overrides = get_option( $this->config['opt_overrides'], [] );
+
+        // Salvataggio respinto: si mostrano i gruppi inviati, non quelli salvati.
+        $respinti = false;
+        if ( $tab === 'groups' && ( $_GET['conflitto'] ?? '' ) === '1' ) {
+            $inviati = get_transient( $this->chiave_respinti() );
+            delete_transient( $this->chiave_respinti() );
+            if ( is_array( $inviati ) ) {
+                $groups   = $inviati;
+                $respinti = true;
+            }
+        }
         ?>
         <div class="wrap uds-pfg-wrap">
             <h1>UdS Posts Footer Grid <span class="uds-pfg-versione">v<?php echo esc_html( $this->config['version'] ); ?></span></h1>
 
             <?php if ( $saved ) : ?>
                 <div class="notice notice-success is-dismissible"><p>Impostazioni salvate.</p></div>
+            <?php endif; ?>
+
+            <?php if ( $respinti ) : ?>
+                <div class="notice notice-error">
+                    <p><strong>Non salvato.</strong> Dopo che hai aperto la pagina, i gruppi sono stati
+                    salvati da un'altra parte (un'altra scheda del browser o un'altra persona):
+                    salvando, quelle modifiche si sarebbero perse.</p>
+                    <p>Qui sotto ci sono i gruppi come li avevi tu. <strong>Salva gruppi</strong> li salva
+                    così, al posto dell'altra versione; per vedere l'altra versione, invece,
+                    <a href="<?php echo esc_url( add_query_arg( [ 'page' => 'uds-pfg', 'tab' => 'groups' ], admin_url( 'admin.php' ) ) ); ?>">ricarica la pagina</a>
+                    (le tue modifiche si perdono).</p>
+                </div>
             <?php endif; ?>
 
             <nav class="nav-tab-wrapper">
@@ -390,6 +440,7 @@ class UDS_Posts_Footer_Grid {
         <form method="post" id="uds-pfg-groups-form">
             <?php wp_nonce_field( 'uds_pfg_save' ); ?>
             <input type="hidden" name="uds_pfg_action" value="save_groups">
+            <input type="hidden" name="uds_pfg_impronta" value="<?php echo esc_attr( $this->impronta_gruppi() ); ?>">
 
             <?php if ( $groups ) : ?>
                 <p class="uds-pfg-comandi-lista">
