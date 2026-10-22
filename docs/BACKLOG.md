@@ -12,6 +12,10 @@ Quando una voce si chiude, si toglie da qui e si annota in `docs/STORIA.md`.
 - Le card già esistenti non sono agganciate: si agganciano rifacendole con "Riempi
   da…", quando si toccano.
 
+- **www, 22/10: CASA EMOZIONI** non lo usa nessuna categoria né articolo (in rosso):
+  assegnarlo o toglierlo. **"Negging"** (n. 201734) ha due righe negli override: vale
+  la prima (Coppia e Relazioni); togliere l'altra.
+
 ## Idee per il plugin
 
 - **Salvataggio con fusione**: oggi, se i gruppi sono stati salvati da un'altra parte
@@ -20,7 +24,6 @@ Quando una voce si chiude, si toglie da qui e si annota in `docs/STORIA.md`.
   fra la versione letta all'apertura, quella salvata e quella inviata). Non urgente.
 
 - **Anteprima della griglia** sotto ogni gruppo, come apparirà nell'articolo.
-- **La ricerca anche nel tab "Override post"**, che oggi chiede il numero dell'articolo.
 - **Esportare e importare i gruppi** (JSON), per portarli da st5 a www. Attenzione:
   gli agganci hanno i numeri del sito di partenza; l'esportazione deve portare anche
   l'indirizzo e ritrovare il numero all'arrivo.
