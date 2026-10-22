@@ -157,3 +157,143 @@
 .uds-pfg-avvisi li {
     margin: 0 0 0.2em;
 }
+
+/* Riempi da… (v1.4.0) */
+.uds-pfg-ricerca {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4em;
+    align-items: center;
+}
+
+.uds-pfg-risultati:not(:empty) {
+    margin-top: 0.5em;
+    max-height: 22em;
+    overflow-y: auto;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    background: #fff;
+    padding: 0.3em;
+}
+
+.uds-pfg-risultato {
+    display: flex;
+    gap: 0.7em;
+    align-items: center;
+    width: 100%;
+    padding: 0.4em;
+    border: 0;
+    border-radius: 3px;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+}
+
+.uds-pfg-risultato:hover,
+.uds-pfg-risultato:focus {
+    background: #f0f6fc;
+    outline: 1px solid #2271b1;
+}
+
+.uds-pfg-risultato img,
+.uds-pfg-senza-img {
+    flex: 0 0 64px;
+    width: 64px;
+    height: 48px;
+    object-fit: cover;
+    border-radius: 3px;
+}
+
+.uds-pfg-senza-img {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f0f0f1;
+    color: #8c8f94;
+    font-size: 0.75em;
+    text-align: center;
+    line-height: 1.1;
+}
+
+.uds-pfg-ris-testo {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.uds-pfg-ris-meta {
+    color: #b32d2e;
+    font-size: 0.9em;
+}
+
+.uds-pfg-ris-link {
+    color: #646970;
+    font-size: 0.85em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.uds-pfg-chiudi-risultati {
+    margin: 0.3em 0.4em;
+}
+
+.uds-pfg-cercando,
+.uds-pfg-nessuno,
+.uds-pfg-errore {
+    margin: 0.3em 0.4em;
+}
+
+.uds-pfg-errore {
+    color: #b32d2e;
+}
+
+.uds-pfg-aggancio-info {
+    margin: 0.4em 0 0;
+    color: #1d6b2c;
+}
+
+.uds-pfg-aggancio-info[hidden] {
+    display: none;
+}
+
+/* Trascinamento con ☰ (v1.4.0) */
+.uds-pfg-group-header .uds-pfg-drag-handle,
+.uds-pfg-card-header .uds-pfg-drag-handle {
+    padding: 0 0.2em;
+    user-select: none;
+}
+
+.uds-pfg-drag-handle:active {
+    cursor: grabbing;
+}
+
+.is-trascinato {
+    opacity: 0.45;
+}
+
+/* Mentre si trascina si vedono solo le intestazioni: dei gruppi, o delle card. */
+.uds-pfg-trascina-gruppo .uds-pfg-group-body,
+.uds-pfg-trascina-card .uds-pfg-card-body {
+    display: none;
+}
+
+/* La freccia delle card chiuse, come quella dei gruppi. */
+.uds-pfg-toggle-card {
+    transition: transform 0.15s;
+}
+
+.uds-pfg-card.is-chiusa .uds-pfg-toggle-card {
+    transform: rotate(-90deg);
+}
+
+.uds-pfg-card.is-chiusa .uds-pfg-card-header {
+    border-bottom: none;
+}
+
+/* Un gruppo senza card accoglie la card trascinata. */
+.uds-pfg-trascina-card .uds-pfg-lista-vuota {
+    min-height: 2.5em;
+    border: 1px dashed #8c8f94;
+    border-radius: 4px;
+}

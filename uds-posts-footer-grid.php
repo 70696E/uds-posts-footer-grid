@@ -2,7 +2,7 @@
 /**
  * Plugin Name: UdS Posts Footer Grid
  * Description: Inserisce una griglia di suggerimenti al fondo degli articoli del blog, configurabile per categoria.
- * Version:     1.3.0
+ * Version:     1.4.0
  * Author:      UdS
  * License:     GPL-2.0-or-later
  * Text Domain: uds-posts-footer-grid
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 define( 'UDS_PFG_CONFIG', [
 
     // Versione — aggiornare ad ogni release per invalidare cache CSS/JS
-    'version'         => '1.3.0',
+    'version'         => '1.4.0',
 
     // Capability o ruoli autorizzati ad accedere alla pagina di amministrazione.
     // Accetta una stringa singola o un array di capability e/o nomi di ruolo.
@@ -78,6 +78,7 @@ class UDS_Posts_Footer_Grid {
         add_action( 'admin_menu',             [ $this, 'register_admin_menu' ] );
         add_action( 'admin_enqueue_scripts',  [ $this, 'enqueue_admin_assets' ] );
         add_action( 'admin_init',             [ $this, 'handle_save' ] );
+        add_action( 'wp_ajax_uds_pfg_cerca',  [ $this, 'ajax_cerca' ] );
         add_filter( 'the_content',            [ $this, 'append_grid' ], 20 );
         add_action( 'wp_enqueue_scripts',     [ $this, 'enqueue_frontend_assets' ] );
     }
@@ -161,6 +162,10 @@ class UDS_Posts_Footer_Grid {
             $this->versione_file( 'admin.js' ),
             true
         );
+        wp_localize_script( 'uds-pfg-admin', 'udsPfg', [
+            'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+            'nonce'   => wp_create_nonce( 'uds_pfg_cerca' ),
+        ] );
 
         wp_enqueue_style(
             'uds-pfg-admin',
@@ -214,14 +219,18 @@ class UDS_Posts_Footer_Grid {
                 'cards'        => [],
             ];
             foreach ( $g['cards'] ?? [] as $c ) {
-                $group['cards'][] = [
+                $card = [
                     'immagine_id'  => absint( $c['immagine_id'] ),
                     'immagine_url' => esc_url_raw( $c['immagine_url'] ),
                     'titolo'       => sanitize_text_field( $c['titolo'] ),
                     'descrizione'  => sanitize_textarea_field( $c['descrizione'] ),
                     'link'         => esc_url_raw( $c['link'] ),
                     'testo_btn'    => sanitize_text_field( $c['testo_btn'] ?? '' ),
+                    'aggancio'     => $this->pulisci_aggancio( (string) ( $c['aggancio'] ?? '' ) ),
                 ];
+                // Il link scritto resta come riserva, aggiornato a ogni salvataggio.
+                $card['link'] = $this->link_card( $card );
+                $group['cards'][] = $card;
             }
             $groups[] = $group;
         }
@@ -347,14 +356,14 @@ class UDS_Posts_Footer_Grid {
 
     private function render_tab_groups( array $groups ) {
         $empty_group = [ 'id' => '', 'nome' => '', 'default' => 0, 'cards' => [] ];
-        $empty_card  = [ 'immagine_id' => '', 'immagine_url' => '', 'titolo' => '', 'descrizione' => '', 'link' => '' ];
+        $empty_card  = [ 'immagine_id' => '', 'immagine_url' => '', 'titolo' => '', 'descrizione' => '', 'link' => '', 'aggancio' => '' ];
 
         // I link da controllare, card per card, e il riepilogo per gruppo.
         $avvisi    = [];
         $riepilogo = [];
         foreach ( $groups as $gi => $group ) {
             foreach ( $group['cards'] as $ci => $card ) {
-                $trovati = $this->avvisi_link( (string) ( $card['link'] ?? '' ) );
+                $trovati = $this->avvisi_card( $card );
                 if ( $trovati ) {
                     $avvisi[ $gi ][ $ci ] = $trovati;
                     $nome = $group['nome'] ?: 'Senza nome';
@@ -501,10 +510,48 @@ class UDS_Posts_Footer_Grid {
                 <?php if ( $avvisi ) : ?>
                     <span class="uds-pfg-avviso">⚠ link da controllare</span>
                 <?php endif; ?>
+                <span class="uds-pfg-group-comandi">
+                    <button type="button" class="button button-small uds-pfg-chiudi-card">Chiudi tutte</button>
+                    <button type="button" class="button button-small uds-pfg-sola-card">Apri solo questa</button>
+                </span>
+                <button type="button" class="button-link uds-pfg-toggle-card" aria-expanded="true" title="Apri / chiudi">▼</button>
                 <button type="button" class="button-link-delete uds-pfg-remove-card">Rimuovi</button>
             </div>
             <div class="uds-pfg-card-body">
                 <table class="form-table">
+                    <tr class="uds-pfg-riga-ricerca">
+                        <th>Riempi da</th>
+                        <td>
+                            <div class="uds-pfg-ricerca">
+                                <select class="uds-pfg-fonte" aria-label="Dove cercare">
+                                    <?php
+                                    $fonti = $this->fonti_ricerca();
+                                    foreach ( [
+                                        'Contenuti'        => fn( $v ) => ! str_starts_with( $v, 'tax:' ),
+                                        'Categorie e tag'  => fn( $v ) => str_starts_with( $v, 'tax:' ),
+                                    ] as $gruppo => $appartiene ) :
+                                        $scelte = array_filter( $fonti, $appartiene, ARRAY_FILTER_USE_KEY );
+                                        if ( ! $scelte ) continue;
+                                        ?>
+                                        <optgroup label="<?php echo esc_attr( $gruppo ); ?>">
+                                            <?php foreach ( $scelte as $valore => $etichetta ) : ?>
+                                                <option value="<?php echo esc_attr( $valore ); ?>"><?php echo esc_html( $etichetta ); ?></option>
+                                            <?php endforeach; ?>
+                                        </optgroup>
+                                    <?php endforeach; ?>
+                                </select>
+                                <input type="search" class="uds-pfg-cerca regular-text"
+                                       placeholder="Una parola del titolo (vuoto: gli ultimi)"
+                                       aria-label="Parola da cercare">
+                                <button type="button" class="button uds-pfg-cerca-btn">Cerca</button>
+                            </div>
+                            <div class="uds-pfg-risultati" aria-live="polite"></div>
+                            <p class="description">
+                                Un clic su un risultato riempie titolo, descrizione, link e immagine
+                                (poi si possono ritoccare) e aggancia la card a quel contenuto.
+                            </p>
+                        </td>
+                    </tr>
                     <tr>
                         <th>Immagine</th>
                         <td>
@@ -536,16 +583,24 @@ class UDS_Posts_Footer_Grid {
                         <th>Descrizione</th>
                         <td>
                             <textarea name="groups[<?php echo $gi; ?>][cards][<?php echo $ci; ?>][descrizione]"
-                                      rows="2" class="large-text"><?php echo esc_textarea( $card['descrizione'] ); ?></textarea>
+                                      rows="2" class="large-text uds-pfg-card-desc"><?php echo esc_textarea( $card['descrizione'] ); ?></textarea>
                         </td>
                     </tr>
                     <tr>
                         <th>Link</th>
                         <td>
                             <input type="text" name="groups[<?php echo $gi; ?>][cards][<?php echo $ci; ?>][link]"
-                                   value="<?php echo esc_url( $card['link'] ); ?>"
-                                   class="large-text"
+                                   value="<?php echo esc_url( $this->link_card( $card ) ); ?>"
+                                   class="large-text uds-pfg-link"
                                    placeholder="https://... oppure /percorso/relativo">
+                            <input type="hidden" name="groups[<?php echo $gi; ?>][cards][<?php echo $ci; ?>][aggancio]"
+                                   class="uds-pfg-aggancio" value="<?php echo esc_attr( $card['aggancio'] ?? '' ); ?>">
+                            <?php $nome_aggancio = $this->nome_aggancio( (string) ( $card['aggancio'] ?? '' ) ); ?>
+                            <p class="uds-pfg-aggancio-info" <?php echo $nome_aggancio === '' ? 'hidden' : ''; ?>>
+                                🔗 Agganciata a <strong class="uds-pfg-aggancio-nome"><?php echo esc_html( $nome_aggancio ); ?></strong>:
+                                il link si aggiorna da solo se cambia indirizzo.
+                                <button type="button" class="button-link uds-pfg-sgancia">Sgancia</button>
+                            </p>
                             <?php if ( $avvisi ) : ?>
                                 <ul class="uds-pfg-avvisi">
                                     <?php foreach ( $avvisi as $avviso ) : ?>
@@ -759,6 +814,221 @@ class UDS_Posts_Footer_Grid {
     }
 
     // ----------------------------------------------------------
+    // AGGANCIO — la card legata a un contenuto o a una categoria
+    // ----------------------------------------------------------
+
+    /*
+     * Una card riempita dalla ricerca ricorda a che cosa è agganciata:
+     * "post:123" (pagina, articolo, corso: qualunque tipo di contenuto) o
+     * "term:tassonomia:45" (una categoria). Il link si ricalcola ogni volta
+     * da lì, così se il contenuto cambia indirizzo la card lo segue (il
+     * 22/10 su www sette card puntavano a corsi rinominati). Titolo, testo
+     * e immagine invece restano quelli salvati: si possono ritoccare.
+     * Il link scritto resta come riserva, se il contenuto sparisce.
+     * I numeri sono quelli del sito: non valgono su un altro sito.
+     */
+
+    private function pulisci_aggancio( string $aggancio ): string {
+        $aggancio = trim( $aggancio );
+        return preg_match( '/^(post:\d+|term:[a-z0-9_-]+:\d+)$/', $aggancio ) ? $aggancio : '';
+    }
+
+    /** L'oggetto agganciato, se c'è ancora: WP_Post, WP_Term o null. */
+    private function oggetto_aggancio( string $aggancio ): \WP_Post|\WP_Term|null {
+        $parti = explode( ':', $this->pulisci_aggancio( $aggancio ) );
+        if ( $parti[0] === 'post' ) {
+            $post = get_post( (int) $parti[1] );
+            return ( $post && $post->post_status !== 'trash' ) ? $post : null;
+        }
+        if ( $parti[0] === 'term' && taxonomy_exists( $parti[1] ) ) {
+            $termine = get_term( (int) $parti[2], $parti[1] );
+            return $termine instanceof \WP_Term ? $termine : null;
+        }
+        return null;
+    }
+
+    /**
+     * Il link da usare: quello dell'oggetto agganciato, o quello scritto.
+     * Sempre relativo se è del sito.
+     */
+    private function link_card( array $card ): string {
+        $oggetto = $this->oggetto_aggancio( (string) ( $card['aggancio'] ?? '' ) );
+        if ( $oggetto instanceof \WP_Post ) {
+            $link = get_permalink( $oggetto );
+            if ( $link ) return $this->relativo( $link );
+        } elseif ( $oggetto instanceof \WP_Term ) {
+            $link = get_term_link( $oggetto );
+            if ( ! is_wp_error( $link ) ) return $this->relativo( $link );
+        }
+        return $this->relativo( (string) ( $card['link'] ?? '' ) );
+    }
+
+    /**
+     * Un link del sito senza "https://dominio" (con o senza www): vale uguale
+     * in produzione e nei cloni di prova. I link verso altri siti restano interi.
+     */
+    private function relativo( string $link ): string {
+        $link = trim( $link );
+        if ( $link === '' || ! $this->link_del_sito( $link ) ) return $link;
+        $parti = wp_parse_url( $link );
+        return ( $parti['path'] ?? '/' )
+            . ( isset( $parti['query'] ) ? '?' . $parti['query'] : '' )
+            . ( isset( $parti['fragment'] ) ? '#' . $parti['fragment'] : '' );
+    }
+
+    /** "Corso «Titolo»", per la riga sotto il link; vuoto se non agganciata. */
+    private function nome_aggancio( string $aggancio ): string {
+        if ( $this->pulisci_aggancio( $aggancio ) === '' ) return '';
+        $oggetto = $this->oggetto_aggancio( $aggancio );
+        if ( $oggetto instanceof \WP_Post ) {
+            $tipo = get_post_type_object( $oggetto->post_type );
+            return sprintf( '%s «%s»', $tipo ? $tipo->labels->singular_name : $oggetto->post_type, $this->testo( get_the_title( $oggetto ) ) );
+        }
+        if ( $oggetto instanceof \WP_Term ) {
+            $tassonomia = get_taxonomy( $oggetto->taxonomy );
+            return sprintf( '%s «%s»', $tassonomia ? $tassonomia->labels->singular_name : $oggetto->taxonomy, $this->testo( $oggetto->name ) );
+        }
+        return 'un contenuto che non c\'è più';
+    }
+
+    /** Gli avvisi di una card: quelli del link, più l'aggancio perso. */
+    private function avvisi_card( array $card ): array {
+        $avvisi   = [];
+        $aggancio = $this->pulisci_aggancio( (string) ( $card['aggancio'] ?? '' ) );
+        if ( $aggancio !== '' && ! $this->oggetto_aggancio( $aggancio ) ) {
+            $avvisi[] = 'il contenuto a cui era agganciata non c\'è più: vale il link scritto';
+        }
+        return array_merge( $avvisi, $this->avvisi_link( $this->link_card( $card ) ) );
+    }
+
+    /** Testo semplice da un titolo di WordPress (che può avere entità e tag). */
+    private function testo( string $html ): string {
+        return trim( html_entity_decode( wp_strip_all_tags( $html ), ENT_QUOTES, 'UTF-8' ) );
+    }
+
+    // ----------------------------------------------------------
+    // RICERCA — "Riempi da…" nelle card
+    // ----------------------------------------------------------
+
+    /**
+     * Dove si può cercare: i tipi di contenuto pubblici (pagine, articoli e,
+     * dove ci sono, corsi e pacchetti di Tutor) e le loro categorie.
+     * Valori: il nome del tipo, o "tax:nome della tassonomia".
+     * Filtro uds_pfg_fonti_ricerca per toglierne o aggiungerne.
+     */
+    private function fonti_ricerca(): array {
+        // Una volta per pagina: serve a ogni card.
+        static $calcolate = null;
+        if ( $calcolate !== null ) return $calcolate;
+
+        $fonti = [];
+        foreach ( get_post_types( [ 'public' => true ], 'objects' ) as $tipo ) {
+            if ( $tipo->name === 'attachment' ) continue;
+            $fonti[ $tipo->name ] = $tipo->labels->name;
+        }
+        foreach ( get_taxonomies( [ 'public' => true, 'show_ui' => true ], 'objects' ) as $tassonomia ) {
+            // Fra parentesi i contenuti a cui appartiene: due "Tag" non si confondono.
+            $di = [];
+            foreach ( (array) $tassonomia->object_type as $tipo ) {
+                $oggetto_tipo = get_post_type_object( $tipo );
+                if ( $oggetto_tipo ) $di[] = $oggetto_tipo->labels->name;
+            }
+            $fonti[ 'tax:' . $tassonomia->name ] = $tassonomia->labels->name . ( $di ? ' (' . implode( ', ', $di ) . ')' : '' );
+        }
+        // Le pagine per prime: sono la scelta più comune.
+        if ( isset( $fonti['page'] ) ) {
+            $fonti = [ 'page' => $fonti['page'] ] + $fonti;
+        }
+        return $calcolate = (array) apply_filters( 'uds_pfg_fonti_ricerca', $fonti );
+    }
+
+    /**
+     * La ricerca, chiamata dallo script della pagina: fino a 20 risultati,
+     * pubblicati o privati (lo stato si vede), con quello che serve a
+     * riempire la card. Altri plugin aggiungono note a ogni risultato col
+     * filtro uds_pfg_risultato_ricerca (array $risultato, WP_Post|WP_Term).
+     */
+    public function ajax_cerca() {
+        check_ajax_referer( 'uds_pfg_cerca' );
+        if ( ! current_user_can( self::ADMIN_CAP ) ) {
+            wp_send_json_error( 'Permesso negato.', 403 );
+        }
+
+        $fonte  = sanitize_text_field( wp_unslash( $_POST['fonte'] ?? '' ) );
+        $parola = sanitize_text_field( wp_unslash( $_POST['q'] ?? '' ) );
+        if ( ! array_key_exists( $fonte, $this->fonti_ricerca() ) ) {
+            wp_send_json_error( 'Origine della ricerca sconosciuta.', 400 );
+        }
+
+        $risultati = [];
+
+        if ( str_starts_with( $fonte, 'tax:' ) ) {
+            $tassonomia = substr( $fonte, 4 );
+            $termini    = get_terms( [
+                'taxonomy'   => $tassonomia,
+                'hide_empty' => false,
+                'search'     => $parola,
+                'number'     => 20,
+                'orderby'    => 'name',
+            ] );
+            foreach ( is_wp_error( $termini ) ? [] : $termini as $termine ) {
+                $link = get_term_link( $termine );
+                if ( is_wp_error( $link ) ) continue;
+                $immagine = (int) get_term_meta( $termine->term_id, 'thumbnail_id', true );
+                $risultati[] = $this->risultato( $termine, [
+                    'aggancio'    => 'term:' . $tassonomia . ':' . $termine->term_id,
+                    'titolo'      => $this->testo( $termine->name ),
+                    'link'        => $this->relativo( $link ),
+                    'descrizione' => wp_trim_words( $this->testo( $termine->description ), 25 ),
+                    'immagine_id' => $immagine,
+                    'stato'       => '',
+                    'conteggio'   => (int) $termine->count,
+                ] );
+            }
+        } else {
+            $query = new \WP_Query( [
+                'post_type'           => $fonte,
+                'post_status'         => [ 'publish', 'private' ],
+                's'                   => $parola,
+                'search_columns'      => [ 'post_title', 'post_excerpt' ],
+                'orderby'             => $parola === '' ? 'modified' : 'relevance',
+                'order'               => 'DESC',
+                'posts_per_page'      => 20,
+                'no_found_rows'       => true,
+                'ignore_sticky_posts' => true,
+            ] );
+            foreach ( $query->posts as $post ) {
+                $estratto = has_excerpt( $post ) ? $post->post_excerpt : strip_shortcodes( $post->post_content );
+                $stato    = get_post_status_object( $post->post_status );
+                $risultati[] = $this->risultato( $post, [
+                    'aggancio'    => 'post:' . $post->ID,
+                    'titolo'      => $this->testo( get_the_title( $post ) ),
+                    'link'        => $this->relativo( (string) get_permalink( $post ) ),
+                    'descrizione' => wp_trim_words( $this->testo( $estratto ), 25 ),
+                    'immagine_id' => (int) get_post_thumbnail_id( $post ),
+                    'stato'       => $post->post_status === 'publish' ? '' : mb_strtolower( $stato ? $stato->label : $post->post_status ),
+                    'conteggio'   => null,
+                ] );
+            }
+        }
+
+        wp_send_json_success( $risultati );
+    }
+
+    /** Completa un risultato: immagini, tipo, note dei filtri. */
+    private function risultato( \WP_Post|\WP_Term $oggetto, array $dati ): array {
+        $immagine            = $dati['immagine_id'];
+        $dati['immagine_url'] = $immagine ? (string) ( wp_get_attachment_image_url( $immagine, 'large' ) ?: '' ) : '';
+        $dati['anteprima']    = $immagine ? (string) ( wp_get_attachment_image_url( $immagine, 'thumbnail' ) ?: '' ) : '';
+        if ( $dati['immagine_url'] === '' ) $dati['immagine_id'] = 0;
+        $dati['nome_aggancio'] = $this->nome_aggancio( $dati['aggancio'] );
+        $dati['note']          = [];
+        $dati = (array) apply_filters( 'uds_pfg_risultato_ricerca', $dati, $oggetto );
+        $dati['note'] = array_values( array_map( 'strval', (array) ( $dati['note'] ?? [] ) ) );
+        return $dati;
+    }
+
+    // ----------------------------------------------------------
     // CONTROLLO DEI LINK — avvisi nella pagina di amministrazione
     // ----------------------------------------------------------
 
@@ -941,12 +1211,12 @@ class UDS_Posts_Footer_Grid {
             <?php endif; ?>
             <div class="uds-pfg-griglia" style="--uds-pfg-cols:<?php echo min( count( $cards ), 3 ); ?>">
                 <?php foreach ( $cards as $card ) :
+                    $link     = $this->link_card( $card );
                     $has_btn  = ! empty( $card['testo_btn'] );
-                    $has_link = ! empty( $card['link'] );
+                    $has_link = $link !== '';
                     $card_tag = ( ! $has_btn && $has_link ) ? 'a' : 'div';
 
                     // Calcola il link con eventuali parametri UTM
-                    $link = $card['link'];
                     if ( $has_link && $utm_enabled ) {
                         $utm_content = sanitize_title( $card['titolo'] );
                         $utm_args    = array_filter( array_merge( $utm_base, [
