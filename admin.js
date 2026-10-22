@@ -40,11 +40,41 @@ document.addEventListener( 'DOMContentLoaded', function () {
         try { sessionStorage.setItem( CHIAVE_CHIUSI, JSON.stringify( chiusi ) ); } catch ( err ) {}
     }
 
+    // Le card chiuse, allo stesso modo: una card si riconosce dal gruppo e
+    // da ciò a cui porta (aggancio, o link, o titolo).
+    var CHIAVE_CARD_CHIUSE = 'uds-pfg-card-chiuse';
+
+    function idCard( card ) {
+        var gruppo = card.closest( '.uds-pfg-group' );
+        var valore = function ( sel ) { var c = card.querySelector( sel ); return c ? c.value : ''; };
+        return ( gruppo ? idGruppo( gruppo ) : '' ) + '|' +
+            ( valore( '.uds-pfg-aggancio' ) || valore( '.uds-pfg-link' ) || valore( '.uds-pfg-card-titolo' ) );
+    }
+
+    function apriCard( card, aperta ) {
+        card.querySelector( '.uds-pfg-card-body' ).classList.toggle( 'is-hidden', ! aperta );
+        card.classList.toggle( 'is-chiusa', ! aperta );
+        var bottone = card.querySelector( '.uds-pfg-toggle-card' );
+        if ( bottone ) bottone.setAttribute( 'aria-expanded', aperta ? 'true' : 'false' );
+    }
+
+    function ricordaCard() {
+        var chiuse = [];
+        document.querySelectorAll( '#uds-pfg-groups-list .uds-pfg-card.is-chiusa' ).forEach( function ( c ) {
+            chiuse.push( idCard( c ) );
+        } );
+        try { sessionStorage.setItem( CHIAVE_CARD_CHIUSE, JSON.stringify( chiuse ) ); } catch ( err ) {}
+    }
+
     ( function () {
-        var chiusi = [];
+        var chiusi = [], chiuse = [];
         try { chiusi = JSON.parse( sessionStorage.getItem( CHIAVE_CHIUSI ) || '[]' ); } catch ( err ) {}
+        try { chiuse = JSON.parse( sessionStorage.getItem( CHIAVE_CARD_CHIUSE ) || '[]' ); } catch ( err ) {}
         gruppi().forEach( function ( g ) {
             if ( chiusi.indexOf( idGruppo( g ) ) !== -1 ) apriGruppo( g, false );
+        } );
+        document.querySelectorAll( '#uds-pfg-groups-list .uds-pfg-card' ).forEach( function ( c ) {
+            if ( chiuse.indexOf( idCard( c ) ) !== -1 ) apriCard( c, false );
         } );
     } )();
 
@@ -81,9 +111,24 @@ document.addEventListener( 'DOMContentLoaded', function () {
             return;
         }
 
-        // Toggle card (clic sull'header, ma non sui bottoni interni)
-        if ( t.matches( '.uds-pfg-card-header' ) ) {
-            t.nextElementSibling.classList.toggle( 'is-hidden' );
+        // Card del gruppo: chiudi tutte / apri solo questa
+        if ( t.matches( '.uds-pfg-chiudi-card' ) || t.matches( '.uds-pfg-sola-card' ) ) {
+            var questa = t.closest( '.uds-pfg-card' );
+            var sola   = t.matches( '.uds-pfg-sola-card' );
+            questa.closest( '.uds-pfg-cards-list' ).querySelectorAll( '.uds-pfg-card' ).forEach( function ( c ) {
+                apriCard( c, sola && c === questa );
+            } );
+            ricordaCard();
+            return;
+        }
+
+        // Apri / chiudi una card: il pulsante ▼ o un punto qualunque della sua
+        // intestazione, tranne gli altri pulsanti
+        var testaCard = t.closest( '.uds-pfg-card-header' );
+        if ( testaCard && ( t.matches( '.uds-pfg-toggle-card' ) || ! t.closest( 'button, a, input, select, textarea, .uds-pfg-drag-handle' ) ) ) {
+            var cardCliccata = testaCard.closest( '.uds-pfg-card' );
+            apriCard( cardCliccata, cardCliccata.classList.contains( 'is-chiusa' ) );
+            ricordaCard();
             return;
         }
 
@@ -346,8 +391,20 @@ document.addEventListener( 'DOMContentLoaded', function () {
         }, 0 );
     } );
 
+    // Durante il trascinamento il browser non scorre con la rotella: la pagina
+    // scorre da sola vicino ai bordi della finestra, e la rotella si gira a mano.
+    document.addEventListener( 'wheel', function ( e ) {
+        if ( trascinato ) window.scrollBy( 0, e.deltaY );
+    }, { passive: true } );
+
     document.addEventListener( 'dragover', function ( e ) {
         if ( ! trascinato ) return;
+        var bordo = 80;
+        if ( e.clientY < bordo ) {
+            window.scrollBy( 0, -Math.ceil( ( bordo - e.clientY ) / 4 ) );
+        } else if ( e.clientY > window.innerHeight - bordo ) {
+            window.scrollBy( 0, Math.ceil( ( e.clientY - ( window.innerHeight - bordo ) ) / 4 ) );
+        }
         var tipo  = trascinato.classList.contains( 'uds-pfg-card' ) ? '.uds-pfg-card' : '.uds-pfg-group';
         var sopra = e.target.closest( tipo );
 

@@ -272,9 +272,23 @@
     opacity: 0.45;
 }
 
-/* Mentre si trascina un gruppo si vedono solo le intestazioni. */
-.uds-pfg-trascina-gruppo .uds-pfg-group-body {
+/* Mentre si trascina si vedono solo le intestazioni: dei gruppi, o delle card. */
+.uds-pfg-trascina-gruppo .uds-pfg-group-body,
+.uds-pfg-trascina-card .uds-pfg-card-body {
     display: none;
+}
+
+/* La freccia delle card chiuse, come quella dei gruppi. */
+.uds-pfg-toggle-card {
+    transition: transform 0.15s;
+}
+
+.uds-pfg-card.is-chiusa .uds-pfg-toggle-card {
+    transform: rotate(-90deg);
+}
+
+.uds-pfg-card.is-chiusa .uds-pfg-card-header {
+    border-bottom: none;
 }
 
 /* Un gruppo senza card accoglie la card trascinata. */

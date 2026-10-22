@@ -510,6 +510,11 @@ class UDS_Posts_Footer_Grid {
                 <?php if ( $avvisi ) : ?>
                     <span class="uds-pfg-avviso">⚠ link da controllare</span>
                 <?php endif; ?>
+                <span class="uds-pfg-group-comandi">
+                    <button type="button" class="button button-small uds-pfg-chiudi-card">Chiudi tutte</button>
+                    <button type="button" class="button button-small uds-pfg-sola-card">Apri solo questa</button>
+                </span>
+                <button type="button" class="button-link uds-pfg-toggle-card" aria-expanded="true" title="Apri / chiudi">▼</button>
                 <button type="button" class="button-link-delete uds-pfg-remove-card">Rimuovi</button>
             </div>
             <div class="uds-pfg-card-body">

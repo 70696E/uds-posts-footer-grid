@@ -108,7 +108,14 @@ agganciato sparisce, e lo dice un avviso. I numeri sono quelli del sito: copiand
 gruppi su un altro sito, gli agganci non valgono.
 
 **Ordine** (v1.4.0). Il simbolo ☰ di gruppi e card si tiene premuto e si trascina: i
-gruppi fra loro, le card anche da un gruppo all'altro. L'ordine vale con *Salva gruppi*.
+gruppi fra loro, le card anche da un gruppo all'altro. Mentre si trascina si vedono
+solo le intestazioni, e la pagina scorre da sola vicino al bordo alto o basso della
+finestra (la rotella, durante il trascinamento, il browser la ignora). L'ordine vale
+con *Salva gruppi*.
+
+**Card aperte e chiuse** (v1.4.0). Come i gruppi: clic sull'intestazione o sulla
+freccia, *Chiudi tutte* e *Apri solo questa* (valgono per le card di quel gruppo); le
+card chiuse restano chiuse dopo il salvataggio.
 
 **Link da controllare** (v1.3.0). Aprendo il tab, il plugin guarda il link di ogni card
 che porta al sito stesso e, se qualcosa non va, lo scrive sotto il campo Link, accanto
