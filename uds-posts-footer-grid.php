@@ -296,7 +296,7 @@ class UDS_Posts_Footer_Grid {
         $overrides = get_option( $this->config['opt_overrides'], [] );
         ?>
         <div class="wrap uds-pfg-wrap">
-            <h1>UdS Posts Footer Grid</h1>
+            <h1>UdS Posts Footer Grid <span class="uds-pfg-versione">v<?php echo esc_html( $this->config['version'] ); ?></span></h1>
 
             <?php if ( $saved ) : ?>
                 <div class="notice notice-success is-dismissible"><p>Impostazioni salvate.</p></div>
@@ -372,6 +372,13 @@ class UDS_Posts_Footer_Grid {
             <?php wp_nonce_field( 'uds_pfg_save' ); ?>
             <input type="hidden" name="uds_pfg_action" value="save_groups">
 
+            <?php if ( $groups ) : ?>
+                <p class="uds-pfg-comandi-lista">
+                    <button type="button" class="button button-small uds-pfg-chiudi-tutti">Chiudi tutti</button>
+                    <button type="button" class="button button-small uds-pfg-apri-tutti">Apri tutti</button>
+                </p>
+            <?php endif; ?>
+
             <div id="uds-pfg-groups-list">
                 <?php foreach ( $groups as $gi => $group ) : ?>
                     <?php $this->render_group( $gi, $group, $avvisi[ $gi ] ?? [] ); ?>
@@ -403,7 +410,11 @@ class UDS_Posts_Footer_Grid {
                 <?php if ( $avvisi ) : ?>
                     <span class="uds-pfg-avviso"><?php echo esc_html( sprintf( '⚠ link da controllare: %d', count( $avvisi ) ) ); ?></span>
                 <?php endif; ?>
-                <button type="button" class="button-link uds-pfg-toggle-group">▼</button>
+                <span class="uds-pfg-group-comandi">
+                    <button type="button" class="button button-small uds-pfg-chiudi-tutti">Chiudi tutti</button>
+                    <button type="button" class="button button-small uds-pfg-solo-questo">Solo questo</button>
+                </span>
+                <button type="button" class="button-link uds-pfg-toggle-group" aria-expanded="true" title="Apri / chiudi">▼</button>
                 <button type="button" class="button-link-delete uds-pfg-remove-group">Elimina</button>
             </div>
             <div class="uds-pfg-group-body">

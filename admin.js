@@ -9,16 +9,75 @@ document.addEventListener( 'DOMContentLoaded', function () {
     }
 
     // ============================================================
+    // GRUPPI APERTI E CHIUSI
+    // I gruppi chiusi si ricordano per la durata della scheda del
+    // browser (sessionStorage), così dopo "Salva gruppi" restano chiusi.
+    // ============================================================
+
+    var CHIAVE_CHIUSI = 'uds-pfg-gruppi-chiusi';
+
+    function gruppi() {
+        return document.querySelectorAll( '#uds-pfg-groups-list .uds-pfg-group' );
+    }
+
+    function idGruppo( gruppo ) {
+        var campo = gruppo.querySelector( 'input[name$="][id]"]' );
+        return campo ? campo.value : '';
+    }
+
+    function apriGruppo( gruppo, aperto ) {
+        gruppo.querySelector( '.uds-pfg-group-body' ).classList.toggle( 'is-hidden', ! aperto );
+        gruppo.classList.toggle( 'is-chiuso', ! aperto );
+        var bottone = gruppo.querySelector( '.uds-pfg-toggle-group' );
+        if ( bottone ) bottone.setAttribute( 'aria-expanded', aperto ? 'true' : 'false' );
+    }
+
+    function ricordaGruppi() {
+        var chiusi = [];
+        gruppi().forEach( function ( g ) {
+            if ( g.classList.contains( 'is-chiuso' ) ) chiusi.push( idGruppo( g ) );
+        } );
+        try { sessionStorage.setItem( CHIAVE_CHIUSI, JSON.stringify( chiusi ) ); } catch ( err ) {}
+    }
+
+    ( function () {
+        var chiusi = [];
+        try { chiusi = JSON.parse( sessionStorage.getItem( CHIAVE_CHIUSI ) || '[]' ); } catch ( err ) {}
+        gruppi().forEach( function ( g ) {
+            if ( chiusi.indexOf( idGruppo( g ) ) !== -1 ) apriGruppo( g, false );
+        } );
+    } )();
+
+    // ============================================================
     // CLICK — delegazione su document
     // ============================================================
 
     document.addEventListener( 'click', function ( e ) {
         var t = e.target;
 
-        // Toggle gruppo (clic sul pulsante ▼ o sul nome in grassetto)
-        if ( t.matches( '.uds-pfg-toggle-group' ) || t.matches( '.uds-pfg-group-header strong' ) ) {
-            e.stopPropagation();
-            t.closest( '.uds-pfg-group' ).querySelector( '.uds-pfg-group-body' ).classList.toggle( 'is-hidden' );
+        // Chiudi tutti / Apri tutti (in cima alla lista e in ogni gruppo)
+        if ( t.matches( '.uds-pfg-chiudi-tutti' ) || t.matches( '.uds-pfg-apri-tutti' ) ) {
+            var aperti = t.matches( '.uds-pfg-apri-tutti' );
+            gruppi().forEach( function ( g ) { apriGruppo( g, aperti ); } );
+            ricordaGruppi();
+            return;
+        }
+
+        // Solo questo: apre il gruppo e chiude gli altri
+        if ( t.matches( '.uds-pfg-solo-questo' ) ) {
+            var questo = t.closest( '.uds-pfg-group' );
+            gruppi().forEach( function ( g ) { apriGruppo( g, g === questo ); } );
+            ricordaGruppi();
+            return;
+        }
+
+        // Apri / chiudi un gruppo: il pulsante ▼ o un punto qualunque della
+        // sua intestazione, tranne gli altri pulsanti
+        var intestazione = t.closest( '.uds-pfg-group-header' );
+        if ( intestazione && ( t.matches( '.uds-pfg-toggle-group' ) || ! t.closest( 'button, a, input, select, textarea' ) ) ) {
+            var gruppo = intestazione.closest( '.uds-pfg-group' );
+            apriGruppo( gruppo, gruppo.classList.contains( 'is-chiuso' ) );
+            ricordaGruppi();
             return;
         }
 

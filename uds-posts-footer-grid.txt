@@ -5,6 +5,10 @@
   Solo nell'amministrazione: sul sito le card non cambiano.
 - Filtro uds_pfg_avvisi_link per aggiungere altri motivi
   (lo usa pin-uds-custom-2026, ritocco avvisi_griglia_articoli).
+- Gruppi: "Chiudi tutti" / "Apri tutti" in cima, "Chiudi tutti" e
+  "Solo questo" in ogni gruppo; si apre e chiude cliccando su tutta
+  l'intestazione; i gruppi chiusi restano chiusi dopo il salvataggio
+  (sessionStorage). Versione accanto al titolo della pagina.
 
 
 20260524 v1.2.0

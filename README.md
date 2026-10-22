@@ -108,6 +108,12 @@ I link verso altri siti non si controllano. Sul sito le card restano come sono: 
 avvisi sono solo qui. Altri plugin aggiungono i loro motivi col filtro
 `uds_pfg_avvisi_link` (sotto).
 
+**Aprire e chiudere i gruppi** (v1.3.0). Un clic su un punto qualunque dell'intestazione
+di un gruppo (o sulla freccia) lo apre o lo chiude; in ogni intestazione *Chiudi tutti*
+e *Solo questo* (apre quel gruppo e chiude gli altri); in cima alla lista *Chiudi tutti*
+e *Apri tutti*. I gruppi chiusi restano chiusi dopo *Salva gruppi*, finché la scheda del
+browser è aperta.
+
 ### Tab — Categorie
 
 Tabella con tutte le categorie del sito. Per ciascuna si sceglie il gruppo da usare e un **Peso** (numero intero). Se un articolo appartiene a più categorie, viene usata la prima corrispondenza in ordine di peso crescente (peso 10 prima di peso 20). Le categorie lasciate su *— nessuno (usa default) —* non contribuiscono alla selezione.
