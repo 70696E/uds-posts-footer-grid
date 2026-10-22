@@ -78,3 +78,17 @@ modifiche è in `uds-posts-footer-grid.txt` e nei commit.
 - Le card hanno gli stessi comandi dei gruppi (chiudi tutte, apri solo questa).
 - Provato su st5 con un gruppo di prova (ricerca, aggancio a un corso e a una
   categoria, ordine, salvataggio), poi eliminato.
+
+## 5. Il salvataggio da una pagina vecchia (22/10/2026, versione 1.4.1)
+
+- **Il caso**: su www tre card già corrette (Journaling e Carte immaginali in "coach
+  emozionale", La magia dell'Acqua in ACQUA) sono tornate ai link vecchi. Il più
+  probabile: un salvataggio da una scheda del browser aperta prima delle correzioni.
+  *Salva gruppi* salva tutti i gruppi insieme, quindi una pagina vecchia riscrive tutto.
+- **Decisione**: un'impronta dei gruppi nella pagina; se al salvataggio non coincide
+  con quelli salvati, **non si salva**. I gruppi inviati restano per un'ora (transient
+  per utente) e la pagina li ripresenta con un avviso: *Salva gruppi* li salva così
+  (l'impronta è ora quella nuova), oppure si ricarica e si perdono. Non si fondono le
+  due versioni: con gruppi e card riordinabili, una fusione automatica sbaglierebbe.
+- In più il browser chiede conferma prima di lasciare la pagina con modifiche non
+  salvate (la ricerca "Riempi da…" non conta).

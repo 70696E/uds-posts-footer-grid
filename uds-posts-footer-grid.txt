@@ -1,3 +1,9 @@
+20261022 v1.4.1
+- Salvataggio sicuro: se i gruppi sono stati salvati da un'altra scheda o
+  persona dopo l'apertura della pagina, non si salva; la pagina ripresenta
+  i gruppi inviati e si sceglie se salvarli o ricaricare.
+- Conferma del browser prima di lasciare la pagina con modifiche non salvate.
+
 20261022 v1.4.0
 - "Riempi da…" in ogni card: ricerca fra pagine, articoli, corsi,
   pacchetti e categorie (fino a 20 risultati, copertina, stato, numero

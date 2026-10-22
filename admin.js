@@ -185,6 +185,7 @@ document.addEventListener( 'DOMContentLoaded', function () {
                 cardBody.querySelector( '.uds-pfg-img-url' ).value          = att.url;
                 cardBody.querySelector( '.uds-pfg-image-preview' ).innerHTML = '<img src="' + imgUrl + '">';
                 cardBody.querySelector( '.uds-pfg-remove-image' ).style.display = '';
+                segnaModifica();
             } );
             frame.open();
             return;
@@ -450,6 +451,7 @@ document.addEventListener( 'DOMContentLoaded', function () {
     var moduloGruppi = document.getElementById( 'uds-pfg-groups-form' );
     if ( moduloGruppi ) {
         moduloGruppi.addEventListener( 'submit', function () {
+            modificato = false;
             gruppi().forEach( function ( g, gi ) {
                 g.querySelectorAll( '[name^="groups["]' ).forEach( function ( campo ) {
                     campo.name = campo.name.replace( /^groups\[[^\]]*\]/, 'groups[' + gi + ']' );
@@ -495,6 +497,35 @@ document.addEventListener( 'DOMContentLoaded', function () {
             attesa = setTimeout( function () { cerca( card ); }, 400 );
             return;
         }
+    } );
+
+    // ============================================================
+    // MODIFICHE NON SALVATE — il browser chiede conferma prima di
+    // lasciare la pagina (la ricerca non conta: non cambia i gruppi)
+    // ============================================================
+
+    var modificato = false;
+
+    function segnaModifica() { modificato = true; }
+
+    if ( moduloGruppi ) {
+        [ 'input', 'change' ].forEach( function ( evento ) {
+            moduloGruppi.addEventListener( evento, function ( e ) {
+                if ( ! e.target.matches( '.uds-pfg-cerca, .uds-pfg-fonte' ) ) segnaModifica();
+            } );
+        } );
+        moduloGruppi.addEventListener( 'click', function ( e ) {
+            if ( e.target.closest( '.uds-pfg-add-card, .uds-pfg-remove-card, #uds-pfg-add-group, .uds-pfg-remove-group, .uds-pfg-remove-image, .uds-pfg-risultato, .uds-pfg-sgancia' ) ) {
+                segnaModifica();
+            }
+        } );
+        moduloGruppi.addEventListener( 'dragend', segnaModifica );
+    }
+
+    window.addEventListener( 'beforeunload', function ( e ) {
+        if ( ! modificato ) return;
+        e.preventDefault();
+        e.returnValue = '';
     } );
 
 } );
