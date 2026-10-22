@@ -1,0 +1,13 @@
+# Documenti e note di questo plugin non si servono via web: CSS e JS sì.
+# Senza questa regola CLAUDE.md, README e docs/ (percorsi del server, procedure)
+# erano leggibili da chiunque (visto il 22/10/2026). Stessa regola di
+# pin-uds-custom-2026.
+<FilesMatch "\.(md|txt|gitignore|gitattributes)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>

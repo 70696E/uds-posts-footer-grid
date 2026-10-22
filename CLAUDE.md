@@ -53,6 +53,9 @@ st5 e www hanno gruppi diversi, e un gruppo cambiato in uno non cambia nell'altr
 - Codice, commenti e documenti in italiano. JS senza jQuery e senza passaggi di
   compilazione; PHP 8.0 o più.
 - Niente numeri (ID di contenuti) presi da un sito in un comando per l'altro.
+- **I documenti non sono pubblici**: il `.htaccess` del plugin nega via web `.md`, `.txt`
+  e i file di git (CSS e JS restano serviti). Un tipo di file nuovo da tenere privato
+  si aggiunge lì; dopo il pull si prova da ospite che risponda 403.
 
 ## Come si prova su st5
 
