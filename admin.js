@@ -294,7 +294,6 @@ document.addEventListener( 'DOMContentLoaded', function () {
                 ? '⚠ questo articolo ha già una riga più su (gruppo «' + ( gruppo ? gruppo.textContent.trim() : '' ) + '»), che vale al posto di questa: cambia il gruppo lì e togli questa riga'
                 : '⚠ questo articolo ha anche una riga più giù (gruppo «' + ( gruppo ? gruppo.textContent.trim() : '' ) + '»): vale questa, quella si può togliere' ) );
             riga.querySelector( '.uds-pfg-ov-articolo' ).after( lista );
-            altra.scrollIntoView( { block: 'center' } );
             riga.scrollIntoView( { block: 'center' } );
         }
     }
