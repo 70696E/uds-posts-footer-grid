@@ -1,3 +1,15 @@
+20261022 v1.4.0
+- "Riempi da…" in ogni card: ricerca fra pagine, articoli, corsi,
+  pacchetti e categorie (fino a 20 risultati, copertina, stato, numero
+  di elementi); un clic riempie titolo, descrizione, link e immagine.
+- Card agganciata al contenuto scelto: il link si ricalcola da lì
+  (segue i cambi di indirizzo); "Sgancia", o scrivere il link a mano.
+  Avviso se il contenuto agganciato non c'è più.
+- Il ☰ trascina davvero: gruppi, e card anche fra gruppi; al salvataggio
+  i campi si rinumerano nell'ordine della pagina.
+- Filtri uds_pfg_fonti_ricerca e uds_pfg_risultato_ricerca
+  (pin-uds-custom-2026 aggiunge "nascosto" e i corsi visibili).
+
 20261021 v1.3.0
 - Avvisi sui link delle card nel tab Gruppi di card: contenuto non
   pubblicato, indirizzo che non porta a niente, "&amp;" al posto di "&".

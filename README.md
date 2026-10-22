@@ -1,4 +1,4 @@
-# UdS Posts Footer Grid  `v1.3.0` — 2026-10-21
+# UdS Posts Footer Grid  `v1.4.0` — 2026-10-22
 
 Plugin WordPress che appende automaticamente una griglia di card suggerimento al fondo degli articoli del blog. Ogni card mostra immagine, titolo, descrizione e link. La griglia da mostrare si seleziona in base alla categoria dell'articolo, con possibilità di override per singolo post.
 
@@ -22,7 +22,7 @@ La costante in cima a `uds-posts-footer-grid.php` è l'unico punto da toccare pe
 define( 'UDS_PFG_CONFIG', [
 
     // Versione per cache busting CSS/JS — aggiornare ad ogni release
-    'version'        => '1.3.0',
+    'version'        => '1.4.0',
 
     // Chi può accedere al menu admin.
     // Stringa singola o array di capability e/o nomi di ruolo.
@@ -92,11 +92,30 @@ Un **gruppo** è un insieme di card visualizzate insieme. Per ogni gruppo:
 
 Il link accetta URL assoluti (`https://...`) e relativi (`/percorso/pagina`).
 
+**Riempi da…** (v1.4.0). In cima a ogni card: si sceglie dove cercare (pagine,
+articoli, ogni altro tipo di contenuto pubblico — con Tutor corsi e pacchetti — e le
+categorie), si scrive una parola del titolo (vuoto: gli ultimi modificati) e compaiono
+fino a 20 risultati, con la copertina, lo stato (privato) e, per le categorie, il numero
+di elementi. Un clic riempie titolo, descrizione (l'estratto, 25 parole), link e
+immagine; poi tutto si può ritoccare.
+
+**Card agganciata** (v1.4.0). Una card riempita così ricorda il contenuto o la categoria
+(campo `aggancio`: `post:123` o `term:tassonomia:45`) e il link si ricalcola ogni volta
+da lì: se il contenuto cambia indirizzo, la card lo segue. Sotto il link compare
+"Agganciata a …" con *Sgancia*; scrivere a mano nel campo Link sgancia la card. Il link
+scritto resta come riserva (aggiornato a ogni salvataggio): vale se il contenuto
+agganciato sparisce, e lo dice un avviso. I numeri sono quelli del sito: copiando i
+gruppi su un altro sito, gli agganci non valgono.
+
+**Ordine** (v1.4.0). Il simbolo ☰ di gruppi e card si tiene premuto e si trascina: i
+gruppi fra loro, le card anche da un gruppo all'altro. L'ordine vale con *Salva gruppi*.
+
 **Link da controllare** (v1.3.0). Aprendo il tab, il plugin guarda il link di ogni card
 che porta al sito stesso e, se qualcosa non va, lo scrive sotto il campo Link, accanto
 al titolo della card e del gruppo, e in un riepilogo in cima:
 
 - porta a un contenuto **non pubblicato** (bozza, privato, cestino);
+- la card era **agganciata** a un contenuto che non c'è più;
 - **non porta a niente** che WordPress conosca: né un contenuto, né l'archivio di un
   tipo di contenuto, né una categoria che esiste (se il sito lo reindirizza, con una
   regola o perché WordPress indovina un indirizzo simile, il link funziona lo stesso,
@@ -173,6 +192,20 @@ add_filter( 'uds_pfg_avvisi_link', function( array $avvisi, string $link, int $p
     // es. il contenuto è pubblicato ma nascosto da un altro plugin
     return $avvisi;
 }, 10, 3 );
+
+// Dove si può cercare in "Riempi da…": [ valore => etichetta ],
+// valore = tipo di contenuto o "tax:" + tassonomia
+add_filter( 'uds_pfg_fonti_ricerca', function( array $fonti ): array {
+    unset( $fonti['tax:post_tag'] );
+    return $fonti;
+} );
+
+// Aggiunge note a un risultato della ricerca (solo nell'amministrazione)
+// $risultato['note'] = frasi brevi mostrate accanto al titolo
+add_filter( 'uds_pfg_risultato_ricerca', function( array $risultato, $oggetto ): array {
+    // $oggetto è WP_Post o WP_Term
+    return $risultato;
+}, 10, 2 );
 ```
 
 ---
@@ -204,7 +237,8 @@ Tutte le chiavi vengono eliminate automaticamente se il plugin viene disinstalla
       "titolo":       "Scuola di Costellazioni",
       "descrizione":  "Breve descrizione del corso",
       "link":         "/corsi/costellazioni",
-      "testo_btn":    "Scopri il corso"
+      "testo_btn":    "Scopri il corso",
+      "aggancio":     "post:4321"
     }
   ]
 }
@@ -220,7 +254,8 @@ uds-posts-footer-grid/
 ├── frontend.css                # Stili della griglia nel frontend
 ├── admin.css                   # Stili della pagina di amministrazione
 └── admin.js                    # JS admin vanilla (no jQuery): accordion,
-                                #   template gruppi/card, media library
+                                #   template gruppi/card, media library,
+                                #   ricerca "Riempi da…", trascinamento
 ```
 
 ---
