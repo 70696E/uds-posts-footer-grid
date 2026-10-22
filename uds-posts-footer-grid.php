@@ -847,17 +847,33 @@ class UDS_Posts_Footer_Grid {
         return null;
     }
 
-    /** Il link da usare: quello dell'oggetto agganciato, o quello scritto. */
+    /**
+     * Il link da usare: quello dell'oggetto agganciato, o quello scritto.
+     * Sempre relativo se è del sito.
+     */
     private function link_card( array $card ): string {
         $oggetto = $this->oggetto_aggancio( (string) ( $card['aggancio'] ?? '' ) );
         if ( $oggetto instanceof \WP_Post ) {
             $link = get_permalink( $oggetto );
-            if ( $link ) return $link;
+            if ( $link ) return $this->relativo( $link );
         } elseif ( $oggetto instanceof \WP_Term ) {
             $link = get_term_link( $oggetto );
-            if ( ! is_wp_error( $link ) ) return $link;
+            if ( ! is_wp_error( $link ) ) return $this->relativo( $link );
         }
-        return trim( (string) ( $card['link'] ?? '' ) );
+        return $this->relativo( (string) ( $card['link'] ?? '' ) );
+    }
+
+    /**
+     * Un link del sito senza "https://dominio" (con o senza www): vale uguale
+     * in produzione e nei cloni di prova. I link verso altri siti restano interi.
+     */
+    private function relativo( string $link ): string {
+        $link = trim( $link );
+        if ( $link === '' || ! $this->link_del_sito( $link ) ) return $link;
+        $parti = wp_parse_url( $link );
+        return ( $parti['path'] ?? '/' )
+            . ( isset( $parti['query'] ) ? '?' . $parti['query'] : '' )
+            . ( isset( $parti['fragment'] ) ? '#' . $parti['fragment'] : '' );
     }
 
     /** "Corso «Titolo»", per la riga sotto il link; vuoto se non agganciata. */
@@ -962,7 +978,7 @@ class UDS_Posts_Footer_Grid {
                 $risultati[] = $this->risultato( $termine, [
                     'aggancio'    => 'term:' . $tassonomia . ':' . $termine->term_id,
                     'titolo'      => $this->testo( $termine->name ),
-                    'link'        => $link,
+                    'link'        => $this->relativo( $link ),
                     'descrizione' => wp_trim_words( $this->testo( $termine->description ), 25 ),
                     'immagine_id' => $immagine,
                     'stato'       => '',
@@ -987,7 +1003,7 @@ class UDS_Posts_Footer_Grid {
                 $risultati[] = $this->risultato( $post, [
                     'aggancio'    => 'post:' . $post->ID,
                     'titolo'      => $this->testo( get_the_title( $post ) ),
-                    'link'        => get_permalink( $post ),
+                    'link'        => $this->relativo( (string) get_permalink( $post ) ),
                     'descrizione' => wp_trim_words( $this->testo( $estratto ), 25 ),
                     'immagine_id' => (int) get_post_thumbnail_id( $post ),
                     'stato'       => $post->post_status === 'publish' ? '' : mb_strtolower( $stato ? $stato->label : $post->post_status ),

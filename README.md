@@ -90,7 +90,10 @@ Un **gruppo** è un insieme di card visualizzate insieme. Per ogni gruppo:
 | compilato   | presente | card `<div>` + bottone `<a>` col testo indicato |
 | compilato   | vuoto    | card `<div>` + bottone `<span>` non cliccabile |
 
-Il link accetta URL assoluti (`https://...`) e relativi (`/percorso/pagina`).
+Il link accetta URL assoluti (`https://...`) e relativi (`/percorso/pagina`). Dalla 1.4.0 i
+link del sito si scrivono e si salvano relativi (senza `https://dominio`, con o senza
+`www`): valgono uguale in produzione e nei cloni di prova. Quelli verso altri siti
+restano interi.
 
 **Riempi da…** (v1.4.0). In cima a ogni card: si sceglie dove cercare (pagine,
 articoli, ogni altro tipo di contenuto pubblico — con Tutor corsi e pacchetti — e le

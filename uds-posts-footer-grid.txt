@@ -8,6 +8,8 @@
 - Il ☰ trascina davvero: gruppi, e card anche fra gruppi; al salvataggio
   i campi si rinumerano nell'ordine della pagina. Durante il trascinamento
   solo le intestazioni, e scorrimento automatico ai bordi della finestra.
+- Link del sito relativi (ricerca, aggancio, salvataggio): valgono anche
+  nei cloni.
 - Card: "Chiudi tutte", "Apri solo questa", freccia, clic sull'intestazione;
   le card chiuse si ricordano come i gruppi.
 - Filtri uds_pfg_fonti_ricerca e uds_pfg_risultato_ricerca
