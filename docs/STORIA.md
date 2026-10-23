@@ -126,3 +126,15 @@ modifiche è in `uds-posts-footer-grid.txt` e nei commit.
   chiude senza scegliere con Esc, con un clic fuori o con "Chiudi i risultati" (negli
   override "Cambia" si annulla). "Usato da" non conta le righe ripetute.
 
+## 7. Categorie in ordine trascinato, immagini più grandi (23/10/2026, versione 1.6.0)
+
+- Richieste di Sergio: nella mappa niente campo **Peso**, ma righe da riordinare
+  trascinandole (l'ordine è la priorità: vale la prima riga dall'alto che corrisponde a
+  una categoria dell'articolo); colonna "Categoria articolo"; il tab "Override post"
+  diventa **"Override articolo"**; nelle card l'anteprima dell'immagine fino a 300 px,
+  con i bottoni alla sua sinistra (da PC si guadagna spazio in altezza).
+- Nel database il campo `peso` resta (10, 20, 30… dall'ordine delle righe), così la
+  logica che sceglie il gruppo non cambia. In cima le categorie con un gruppo,
+  nell'ordine salvato; poi le altre, per nome.
+- La scheda vuota di CASA EMOZIONI è stata tolta da Sergio su www e st5 (22/10).
+- Provata su st5 da Sergio il 23/10 (ordine delle categorie dopo il salvataggio).

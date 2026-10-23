@@ -7,8 +7,6 @@ Quando una voce si chiude, si toglie da qui e si annota in `docs/STORIA.md`.
 - **La mappa delle categorie verso le scuole**: con la ristrutturazione verso la
   psicogenealogia, quali gruppi per quali categorie del blog (nel backlog di
   `pin-uds-custom-2026`, area 4, "I link interni dopo la ristrutturazione").
-- **CASA EMOZIONI, una card vuota** (senza link, su www e su st5): nell'articolo è un
-  riquadro vuoto; da togliere.
 - Le card già esistenti non sono agganciate: si agganciano rifacendole con "Riempi
   da…", quando si toccano.
 
