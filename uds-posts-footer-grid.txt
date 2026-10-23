@@ -1,3 +1,10 @@
+20261023 v1.6.0
+- Categorie: niente più campo Peso, l'ordine delle righe è la priorità
+  (si trascinano col ☰); colonna "Categoria articolo"; spiegazione nuova.
+- Il tab "Override post" si chiama "Override articolo".
+- Card: anteprima dell'immagine fino a 300 px, con "Scegli immagine" e
+  "Rimuovi" alla sua sinistra.
+
 20261022 v1.5.1
 - Ricerca: parte appena si entra nel campo (anche vuoto: gli ultimi);
   "Mostra altri 20" sotto i risultati. Si chiude senza scegliere con Esc,

@@ -183,6 +183,7 @@ document.addEventListener( 'DOMContentLoaded', function () {
             } );
             frame.on( 'select', function () {
                 var att    = frame.state().get( 'selection' ).first().toJSON();
+                // L'anteprima è larga fino a 300 px: la versione "medium" basta.
                 var imgUrl = att.sizes && att.sizes.medium ? att.sizes.medium.url : att.url;
                 cardBody.querySelector( '.uds-pfg-img-id' ).value           = att.id;
                 cardBody.querySelector( '.uds-pfg-img-url' ).value          = att.url;
@@ -410,7 +411,8 @@ document.addEventListener( 'DOMContentLoaded', function () {
         anteprima.innerHTML = '';
         if ( r.immagine_url ) {
             var img = elemento( 'img' );
-            img.src = r.anteprima || r.immagine_url;
+            // Nella card l'anteprima è grande: l'immagine vera, non la miniatura quadrata.
+            img.src = r.immagine_url;
             anteprima.appendChild( img );
         }
         body.querySelector( '.uds-pfg-remove-image' ).style.display = r.immagine_url ? '' : 'none';
@@ -486,7 +488,7 @@ document.addEventListener( 'DOMContentLoaded', function () {
     document.addEventListener( 'mousedown', function ( e ) {
         var maniglia = e.target.closest( '.uds-pfg-drag-handle' );
         if ( ! maniglia ) return;
-        var el = maniglia.closest( '.uds-pfg-card' ) || maniglia.closest( '.uds-pfg-group' );
+        var el = maniglia.closest( '.uds-pfg-card' ) || maniglia.closest( '.uds-pfg-map-row' ) || maniglia.closest( '.uds-pfg-group' );
         if ( el ) el.setAttribute( 'draggable', 'true' );
     } );
 
@@ -499,7 +501,7 @@ document.addEventListener( 'DOMContentLoaded', function () {
 
     document.addEventListener( 'dragstart', function ( e ) {
         var el = e.target;
-        if ( ! el.matches || ! el.matches( '.uds-pfg-group[draggable="true"], .uds-pfg-card[draggable="true"]' ) ) return;
+        if ( ! el.matches || ! el.matches( '.uds-pfg-group[draggable="true"], .uds-pfg-card[draggable="true"], .uds-pfg-map-row[draggable="true"]' ) ) return;
         e.stopPropagation();
         trascinato = el;
         e.dataTransfer.effectAllowed = 'move';
@@ -513,7 +515,11 @@ document.addEventListener( 'DOMContentLoaded', function () {
             document.querySelectorAll( '.uds-pfg-cards-list' ).forEach( function ( lista ) {
                 lista.classList.toggle( 'uds-pfg-lista-vuota', ! lista.querySelector( '.uds-pfg-card' ) );
             } );
-            document.body.classList.add( el.classList.contains( 'uds-pfg-card' ) ? 'uds-pfg-trascina-card' : 'uds-pfg-trascina-gruppo' );
+            document.body.classList.add(
+                el.classList.contains( 'uds-pfg-card' ) ? 'uds-pfg-trascina-card'
+                    : el.classList.contains( 'uds-pfg-map-row' ) ? 'uds-pfg-trascina-riga'
+                    : 'uds-pfg-trascina-gruppo'
+            );
         }, 0 );
     } );
 
@@ -531,7 +537,9 @@ document.addEventListener( 'DOMContentLoaded', function () {
         } else if ( e.clientY > window.innerHeight - bordo ) {
             window.scrollBy( 0, Math.ceil( ( e.clientY - ( window.innerHeight - bordo ) ) / 4 ) );
         }
-        var tipo  = trascinato.classList.contains( 'uds-pfg-card' ) ? '.uds-pfg-card' : '.uds-pfg-group';
+        var tipo  = trascinato.classList.contains( 'uds-pfg-card' ) ? '.uds-pfg-card'
+            : trascinato.classList.contains( 'uds-pfg-map-row' ) ? '.uds-pfg-map-row'
+            : '.uds-pfg-group';
         var sopra = e.target.closest( tipo );
 
         // Una card in un gruppo che non ne ha.
@@ -564,7 +572,7 @@ document.addEventListener( 'DOMContentLoaded', function () {
         trascinato.classList.remove( 'is-trascinato' );
         trascinato.removeAttribute( 'draggable' );
         trascinato = null;
-        document.body.classList.remove( 'uds-pfg-trascina-card', 'uds-pfg-trascina-gruppo' );
+        document.body.classList.remove( 'uds-pfg-trascina-card', 'uds-pfg-trascina-gruppo', 'uds-pfg-trascina-riga' );
         document.querySelectorAll( '.uds-pfg-lista-vuota' ).forEach( function ( lista ) {
             lista.classList.remove( 'uds-pfg-lista-vuota' );
         } );
@@ -645,6 +653,22 @@ document.addEventListener( 'DOMContentLoaded', function () {
             }
         } );
         moduloGruppi.addEventListener( 'dragend', segnaModifica );
+    }
+
+    // Mappa delle categorie: al salvataggio i campi si rinumerano nell'ordine
+    // delle righe (è la priorità), e un ordine o un gruppo cambiato va salvato.
+    var moduloMappa = document.getElementById( 'uds-pfg-map-form' );
+    if ( moduloMappa ) {
+        moduloMappa.addEventListener( 'submit', function () {
+            modificatoOverride = false;
+            moduloMappa.querySelectorAll( '.uds-pfg-map-row' ).forEach( function ( riga, i ) {
+                riga.querySelectorAll( '[name^="cat_map["]' ).forEach( function ( campo ) {
+                    campo.name = campo.name.replace( /^cat_map\[[^\]]*\]/, 'cat_map[' + i + ']' );
+                } );
+            } );
+        } );
+        moduloMappa.addEventListener( 'change', function () { modificatoOverride = true; } );
+        moduloMappa.addEventListener( 'dragend', function () { modificatoOverride = true; } );
     }
 
     // Anche nella scheda degli override: un articolo scelto o un gruppo cambiato.

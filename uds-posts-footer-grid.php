@@ -2,7 +2,7 @@
 /**
  * Plugin Name: UdS Posts Footer Grid
  * Description: Inserisce una griglia di suggerimenti al fondo degli articoli del blog, configurabile per categoria.
- * Version:     1.5.1
+ * Version:     1.6.0
  * Author:      UdS
  * License:     GPL-2.0-or-later
  * Text Domain: uds-posts-footer-grid
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 define( 'UDS_PFG_CONFIG', [
 
     // Versione — aggiornare ad ogni release per invalidare cache CSS/JS
-    'version'         => '1.5.1',
+    'version'         => '1.6.0',
 
     // Capability o ruoli autorizzati ad accedere alla pagina di amministrazione.
     // Accetta una stringa singola o un array di capability e/o nomi di ruolo.
@@ -278,16 +278,18 @@ class UDS_Posts_Footer_Grid {
     }
 
     private function save_map() {
+        // Il peso è la posizione della riga nella pagina (dalla 1.6.0 le righe si
+        // riordinano trascinandole): 10, 20, 30… Lo script rinumera i campi
+        // nell'ordine della pagina prima di inviare.
         $map = [];
         foreach ( $_POST['cat_map'] ?? [] as $entry ) {
             if ( empty( $entry['slug'] ) || empty( $entry['group_id'] ) ) continue;
             $map[] = [
                 'slug'     => sanitize_key( $entry['slug'] ),
                 'group_id' => sanitize_key( $entry['group_id'] ),
-                'peso'     => absint( $entry['peso'] ),
+                'peso'     => ( count( $map ) + 1 ) * 10,
             ];
         }
-        usort( $map, fn( $a, $b ) => $a['peso'] - $b['peso'] );
 
         update_option( $this->config['opt_map'], $map );
         $this->redirect_saved( 'map' );
@@ -375,7 +377,7 @@ class UDS_Posts_Footer_Grid {
                 <?php foreach ( [
                     'groups'   => 'Gruppi di card',
                     'map'      => 'Categorie',
-                    'overrides'=> 'Override post',
+                    'overrides'=> 'Override articolo',
                     'settings' => 'Impostazioni',
                 ] as $key => $label ) : ?>
                     <a href="?page=uds-pfg&tab=<?php echo $key; ?>"
@@ -613,20 +615,24 @@ class UDS_Posts_Footer_Grid {
                     <tr>
                         <th>Immagine</th>
                         <td>
-                            <div class="uds-pfg-image-preview">
-                                <?php if ( $card['immagine_url'] ) : ?>
-                                    <img src="<?php echo esc_url( $card['immagine_url'] ); ?>">
-                                <?php endif; ?>
-                            </div>
                             <input type="hidden" name="groups[<?php echo $gi; ?>][cards][<?php echo $ci; ?>][immagine_id]"
                                    class="uds-pfg-img-id" value="<?php echo esc_attr( $card['immagine_id'] ); ?>">
                             <input type="hidden" name="groups[<?php echo $gi; ?>][cards][<?php echo $ci; ?>][immagine_url]"
                                    class="uds-pfg-img-url" value="<?php echo esc_url( $card['immagine_url'] ); ?>">
-                            <button type="button" class="button uds-pfg-select-image">Scegli immagine</button>
-                            <button type="button" class="button uds-pfg-remove-image"
-                                    <?php echo empty( $card['immagine_url'] ) ? 'style="display:none"' : ''; ?>>
-                                Rimuovi
-                            </button>
+                            <div class="uds-pfg-image-campo">
+                                <div class="uds-pfg-image-comandi">
+                                    <button type="button" class="button uds-pfg-select-image">Scegli immagine</button>
+                                    <button type="button" class="button uds-pfg-remove-image"
+                                            <?php echo empty( $card['immagine_url'] ) ? 'style="display:none"' : ''; ?>>
+                                        Rimuovi
+                                    </button>
+                                </div>
+                                <div class="uds-pfg-image-preview">
+                                    <?php if ( $card['immagine_url'] ) : ?>
+                                        <img src="<?php echo esc_url( $card['immagine_url'] ); ?>" alt="">
+                                    <?php endif; ?>
+                                </div>
+                            </div>
                         </td>
                     </tr>
                     <tr>
@@ -746,19 +752,30 @@ class UDS_Posts_Footer_Grid {
     private function render_tab_map( array $groups, array $map ) {
         $categories = get_categories( [ 'hide_empty' => false, 'orderby' => 'name', 'order' => 'ASC' ] );
         $map_index  = array_column( $map, null, 'slug' );
+
+        // L'ordine delle righe è la priorità: prima le categorie con un gruppo,
+        // nell'ordine salvato; poi le altre, per nome.
+        $posizione = array_flip( array_column( $map, 'slug' ) );
+        usort( $categories, function ( $a, $b ) use ( $posizione ) {
+            $pa = $posizione[ $a->slug ] ?? PHP_INT_MAX;
+            $pb = $posizione[ $b->slug ] ?? PHP_INT_MAX;
+            return $pa === $pb ? strcasecmp( $a->name, $b->name ) : $pa <=> $pb;
+        } );
         ?>
-        <form method="post">
+        <form method="post" id="uds-pfg-map-form">
             <?php wp_nonce_field( 'uds_pfg_save' ); ?>
             <input type="hidden" name="uds_pfg_action" value="save_map">
             <p>
-                Il campo <strong>Peso</strong> determina la priorità: se un articolo ha più categorie,
-                vale la prima corrispondenza trovata in ordine di peso crescente.
+                Per ogni articolo vale <strong>la prima riga, dall'alto, che corrisponde a una delle
+                sue categorie</strong> e ha un gruppo; salvo indicazione diversa in
+                <em>Override articolo</em>. Senza nessuna riga che corrisponde, vale il gruppo
+                predefinito. Trascina le righe col simbolo ☰ per cambiare l'ordine.
             </p>
             <table class="widefat fixed striped uds-pfg-map-table">
                 <thead>
                     <tr>
-                        <th style="width:80px">Peso</th>
-                        <th>Categoria</th>
+                        <th style="width:40px"></th>
+                        <th>Categoria articolo</th>
                         <th>Slug</th>
                         <th style="width:80px">Articoli</th>
                         <th>Gruppo</th>
@@ -766,13 +783,11 @@ class UDS_Posts_Footer_Grid {
                 </thead>
                 <tbody>
                     <?php foreach ( $categories as $i => $cat ) :
-                        $saved = $map_index[ $cat->slug ] ?? [ 'group_id' => '', 'peso' => ( $i + 1 ) * 10 ];
+                        $saved = $map_index[ $cat->slug ] ?? [ 'group_id' => '' ];
                         ?>
-                        <tr>
+                        <tr class="uds-pfg-map-row">
                             <td>
-                                <input type="number" name="cat_map[<?php echo $i; ?>][peso]"
-                                       value="<?php echo esc_attr( $saved['peso'] ); ?>"
-                                       style="width:60px" min="0">
+                                <span class="uds-pfg-drag-handle" title="Trascina per cambiare l'ordine">☰</span>
                                 <input type="hidden" name="cat_map[<?php echo $i; ?>][slug]"
                                        value="<?php echo esc_attr( $cat->slug ); ?>">
                             </td>

@@ -80,15 +80,22 @@
     padding: 6px 10px;
 }
 
-/* Anteprima immagine */
-.uds-pfg-image-preview {
-    margin-bottom: 0.5em;
-    min-height: 20px;
+/* Immagine della card: comandi a sinistra, anteprima fino a 300 px (v1.6.0) */
+.uds-pfg-image-campo {
+    display: flex;
+    gap: 0.8em;
+    align-items: flex-start;
+}
+
+.uds-pfg-image-comandi {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4em;
 }
 
 .uds-pfg-image-preview img {
-    max-width: 120px;
-    max-height: 120px;
+    max-width: 300px;
+    max-height: 200px;
     border: 1px solid #ddd;
     border-radius: 3px;
     display: block;
@@ -323,5 +330,12 @@
 .uds-pfg-ov-articolo[hidden],
 .uds-pfg-ov-ricerca[hidden] {
     display: none;
+}
+
+/* Mappa delle categorie: righe trascinabili (v1.6.0) */
+.uds-pfg-map-row .uds-pfg-drag-handle {
+    cursor: grab;
+    color: #8c8f94;
+    font-size: 1.1em;
 }
 

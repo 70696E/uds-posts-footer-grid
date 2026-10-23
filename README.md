@@ -1,4 +1,4 @@
-# UdS Posts Footer Grid  `v1.5.1` — 2026-10-22
+# UdS Posts Footer Grid  `v1.6.0` — 2026-10-23
 
 Plugin WordPress che appende automaticamente una griglia di card suggerimento al fondo degli articoli del blog. Ogni card mostra immagine, titolo, descrizione e link. La griglia da mostrare si seleziona in base alla categoria dell'articolo, con possibilità di override per singolo post.
 
@@ -22,7 +22,7 @@ La costante in cima a `uds-posts-footer-grid.php` è l'unico punto da toccare pe
 define( 'UDS_PFG_CONFIG', [
 
     // Versione per cache busting CSS/JS — aggiornare ad ogni release
-    'version'        => '1.5.1',
+    'version'        => '1.6.0',
 
     // Chi può accedere al menu admin.
     // Stringa singola o array di capability e/o nomi di ruolo.
@@ -160,7 +160,7 @@ articolo.
 
 ### Tab — Categorie
 
-Tabella con tutte le categorie del sito. Per ciascuna si sceglie il gruppo da usare e un **Peso** (numero intero). Se un articolo appartiene a più categorie, viene usata la prima corrispondenza in ordine di peso crescente (peso 10 prima di peso 20). Le categorie lasciate su *— nessuno (usa default) —* non contribuiscono alla selezione.
+Tabella con tutte le categorie degli articoli. Per ciascuna si sceglie il gruppo da usare. **L'ordine delle righe è la priorità** (dalla v1.6.0, al posto del campo Peso): per ogni articolo vale la prima riga, dall'alto, che corrisponde a una delle sue categorie e ha un gruppo, salvo un *Override articolo*. Le righe si riordinano trascinandole col simbolo ☰; in cima quelle con un gruppo, nell'ordine salvato, poi le altre per nome. Nel database resta il campo `peso` (10, 20, 30… secondo l'ordine). Le categorie lasciate su *— nessuno (usa default) —* non contribuiscono alla selezione.
 La colonna **Articoli** dice quanti articoli ha ogni categoria (v1.5.0).
 
 **Categorie che non ci sono più** (v1.5.0). La mappa è salvata per slug: se una
@@ -169,7 +169,7 @@ tabella un riquadro elenca queste righe ("slug → gruppo"); spariscono al pross
 *Salva mappa categorie*. Gli articoli che erano lì prendono il gruppo delle loro altre
 categorie, o il predefinito.
 
-### Tab — Override post
+### Tab — Override articolo
 
 Assegna un gruppo specifico a un singolo articolo. Ha priorità assoluta su categoria e
 default. Dalla v1.5.0 l'articolo si cerca per titolo (come in "Riempi da…") invece di
@@ -197,7 +197,7 @@ La descrizione nel pannello mostra in anteprima i valori che verranno usati.
 Per ogni singolo articolo, il plugin scorre questi passi nell'ordine:
 
 1. **Override per post ID** — se esiste un override per quell'articolo, usa quel gruppo
-2. **Mappa categorie** — controlla le categorie dell'articolo in ordine di peso crescente; usa il primo gruppo assegnato
+2. **Mappa categorie** — scorre le righe della mappa dall'alto (l'ordine trascinato) e usa la prima che corrisponde a una categoria dell'articolo e ha un gruppo
 3. **Gruppo default** — usa il gruppo marcato come default
 4. **Nessun gruppo trovato** — la griglia non viene mostrata
 
