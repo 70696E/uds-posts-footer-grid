@@ -80,7 +80,7 @@
     padding: 6px 10px;
 }
 
-/* Immagine della card: comandi a sinistra, anteprima fino a 300 px (v1.6.0) */
+/* Immagine della card: anteprima fino a 300 px, comandi alla sua destra (v1.6.1) */
 .uds-pfg-image-campo {
     display: flex;
     gap: 0.8em;

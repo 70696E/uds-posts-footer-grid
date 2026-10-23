@@ -1,3 +1,7 @@
+20261023 v1.6.1
+- Card: i bottoni dell'immagine alla destra dell'anteprima (non a sinistra);
+  "Cambia immagine" quando l'immagine c'è.
+
 20261023 v1.6.0
 - Categorie: niente più campo Peso, l'ordine delle righe è la priorità
   (si trascinano col ☰); colonna "Categoria articolo"; spiegazione nuova.

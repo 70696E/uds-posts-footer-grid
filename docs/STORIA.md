@@ -138,3 +138,5 @@ modifiche è in `uds-posts-footer-grid.txt` e nei commit.
   nell'ordine salvato; poi le altre, per nome.
 - La scheda vuota di CASA EMOZIONI è stata tolta da Sergio su www e st5 (22/10).
 - Provata su st5 da Sergio il 23/10 (ordine delle categorie dopo il salvataggio).
+- **1.6.1**: Sergio intendeva i bottoni alla **destra** dell'anteprima (non sotto, non a
+  sinistra); "Scegli immagine" diventa "Cambia immagine" quando l'immagine c'è.
