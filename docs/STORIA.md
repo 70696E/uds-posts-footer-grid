@@ -140,3 +140,6 @@ modifiche è in `uds-posts-footer-grid.txt` e nei commit.
 - Provata su st5 da Sergio il 23/10 (ordine delle categorie dopo il salvataggio).
 - **1.6.1**: Sergio intendeva i bottoni alla **destra** dell'anteprima (non sotto, non a
   sinistra); "Scegli immagine" diventa "Cambia immagine" quando l'immagine c'è.
+- Provata su st5 il 23/10 (anteprima 302×171, bottoni a destra, "Cambia immagine"). Su
+  www, con la 1.6.0, Sergio ha assegnato Casa emozioni (categoria Olistica) e tolto la
+  riga doppia di Negging: nessun avviso.

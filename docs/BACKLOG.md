@@ -10,11 +10,12 @@ Quando una voce si chiude, si toglie da qui e si annota in `docs/STORIA.md`.
 - Le card già esistenti non sono agganciate: si agganciano rifacendole con "Riempi
   da…", quando si toccano.
 
-- **www, 22/10: CASA EMOZIONI** non lo usa nessuna categoria né articolo (in rosso):
-  assegnarlo o toglierlo. **"Negging"** (n. 201734) ha due righe negli override: vale
-  la prima (Coppia e Relazioni); togliere l'altra.
-
 ## Idee per il plugin
+
+- **Il blocco del salvataggio da una pagina vecchia anche per Categorie e Override
+  articolo** (oggi solo per i gruppi, 1.4.1). Il 23/10 su www la riga doppia di
+  "Negging", che Sergio credeva di aver già tolto, c'era ancora: forse una rimozione
+  non salvata, o riscritta da una pagina rimasta aperta.
 
 - **Salvataggio con fusione**: oggi, se i gruppi sono stati salvati da un'altra parte
   dopo l'apertura della pagina, non si salva (1.4.1). Si potrebbe salvare lo stesso
