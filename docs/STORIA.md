@@ -137,4 +137,4 @@ modifiche è in `uds-posts-footer-grid.txt` e nei commit.
   logica che sceglie il gruppo non cambia. In cima le categorie con un gruppo,
   nell'ordine salvato; poi le altre, per nome.
 - La scheda vuota di CASA EMOZIONI è stata tolta da Sergio su www e st5 (22/10).
-
+- Provata su st5 da Sergio il 23/10 (ordine delle categorie dopo il salvataggio).
