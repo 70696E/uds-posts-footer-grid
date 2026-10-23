@@ -2,7 +2,7 @@
 /**
  * Plugin Name: UdS Posts Footer Grid
  * Description: Inserisce una griglia di suggerimenti al fondo degli articoli del blog, configurabile per categoria.
- * Version:     1.6.0
+ * Version:     1.6.1
  * Author:      UdS
  * License:     GPL-2.0-or-later
  * Text Domain: uds-posts-footer-grid
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 define( 'UDS_PFG_CONFIG', [
 
     // Versione — aggiornare ad ogni release per invalidare cache CSS/JS
-    'version'         => '1.6.0',
+    'version'         => '1.6.1',
 
     // Capability o ruoli autorizzati ad accedere alla pagina di amministrazione.
     // Accetta una stringa singola o un array di capability e/o nomi di ruolo.
@@ -620,17 +620,17 @@ class UDS_Posts_Footer_Grid {
                             <input type="hidden" name="groups[<?php echo $gi; ?>][cards][<?php echo $ci; ?>][immagine_url]"
                                    class="uds-pfg-img-url" value="<?php echo esc_url( $card['immagine_url'] ); ?>">
                             <div class="uds-pfg-image-campo">
-                                <div class="uds-pfg-image-comandi">
-                                    <button type="button" class="button uds-pfg-select-image">Scegli immagine</button>
-                                    <button type="button" class="button uds-pfg-remove-image"
-                                            <?php echo empty( $card['immagine_url'] ) ? 'style="display:none"' : ''; ?>>
-                                        Rimuovi
-                                    </button>
-                                </div>
                                 <div class="uds-pfg-image-preview">
                                     <?php if ( $card['immagine_url'] ) : ?>
                                         <img src="<?php echo esc_url( $card['immagine_url'] ); ?>" alt="">
                                     <?php endif; ?>
+                                </div>
+                                <div class="uds-pfg-image-comandi">
+                                    <button type="button" class="button uds-pfg-select-image"><?php echo empty( $card['immagine_url'] ) ? 'Scegli immagine' : 'Cambia immagine'; ?></button>
+                                    <button type="button" class="button uds-pfg-remove-image"
+                                            <?php echo empty( $card['immagine_url'] ) ? 'style="display:none"' : ''; ?>>
+                                        Rimuovi
+                                    </button>
                                 </div>
                             </div>
                         </td>

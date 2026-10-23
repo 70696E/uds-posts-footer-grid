@@ -189,6 +189,7 @@ document.addEventListener( 'DOMContentLoaded', function () {
                 cardBody.querySelector( '.uds-pfg-img-url' ).value          = att.url;
                 cardBody.querySelector( '.uds-pfg-image-preview' ).innerHTML = '<img src="' + imgUrl + '">';
                 cardBody.querySelector( '.uds-pfg-remove-image' ).style.display = '';
+                etichettaImmagine( cardBody );
                 segnaModifica();
             } );
             frame.open();
@@ -203,6 +204,7 @@ document.addEventListener( 'DOMContentLoaded', function () {
             cardBody2.querySelector( '.uds-pfg-img-id' ).value            = '';
             cardBody2.querySelector( '.uds-pfg-img-url' ).value           = '';
             t.style.display = 'none';
+            etichettaImmagine( cardBody2 );
             return;
         }
 
@@ -416,11 +418,18 @@ document.addEventListener( 'DOMContentLoaded', function () {
             anteprima.appendChild( img );
         }
         body.querySelector( '.uds-pfg-remove-image' ).style.display = r.immagine_url ? '' : 'none';
+        etichettaImmagine( body );
         body.querySelector( '.uds-pfg-aggancio' ).value = r.aggancio;
         var info = body.querySelector( '.uds-pfg-aggancio-info' );
         info.querySelector( '.uds-pfg-aggancio-nome' ).textContent = r.nome_aggancio;
         info.hidden = false;
         card.querySelector( '.uds-pfg-card-label' ).textContent = r.titolo || 'Nuova card';
+    }
+
+    // "Scegli immagine" se la card non ne ha, "Cambia immagine" se ce l'ha.
+    function etichettaImmagine( body ) {
+        var bottone = body.querySelector( '.uds-pfg-select-image' );
+        if ( bottone ) bottone.textContent = body.querySelector( '.uds-pfg-img-url' ).value ? 'Cambia immagine' : 'Scegli immagine';
     }
 
     function sgancia( body ) {
